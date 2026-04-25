@@ -1,90 +1,100 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
-   SIGNAL LENS — OpenWatch Design System v3
-   Dark-first. Teal signal intelligence. Investigative precision.
+   OPENWATCH — Meta-Craft Identity v1
+   Light-first. Court Navy signature. Investigative discipline.
+   Severity tones functional only.
    ═══════════════════════════════════════════════════════════════════ */
 
 @theme {
   /* ── Typography ─────────────────────────────────────────────────── */
-  --font-display: 'Geist', 'Inter', system-ui, sans-serif;
+  --font-display: 'Geist', 'Inter Tight', system-ui, sans-serif;
   --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:    'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* ── Core Surfaces ──────────────────────────────────────────────── */
-  --color-bg:            #0b1220;
-  --color-surface:       #111827;
-  --color-surface-2:     #0f172a;
-  --color-surface-3:     #162235;
-  --color-surface-4:     #1f2d43;
+  /* ── Surfaces (light-first) ─────────────────────────────────────── */
+  --color-canvas:        #FFFFFF;
+  --color-surface:       #F7F8FA;
+  --color-surface-2:     #F1F4F7;
+  --color-surface-3:     #E8EDF7;
+  --color-surface-dark:  #0A1129;
+  --color-surface-dark-2:#1B2B5C;
 
   /* ── Borders ────────────────────────────────────────────────────── */
-  --color-border:        #223449;
-  --color-border-strong: #31516d;
-  --color-border-focus:  #2dd4bf;
+  --color-border:        #E4E7EC;
+  --color-border-strong: #CBD2D9;
+  --color-border-focus:  #1B2B5C;
 
   /* ── Text ───────────────────────────────────────────────────────── */
-  --color-text:          #f8fafc;
-  --color-text-2:        #9ca3af;
-  --color-text-3:        #64748b;
-  --color-text-inv:      #07131f;
+  --color-text:          #0A1129;
+  --color-text-2:        #4B5563;
+  --color-text-3:        #6B7280;
+  --color-text-inv:      #FFFFFF;
 
-  /* ── Brand / Accent ─────────────────────────────────────────────── */
-  --color-brand:         #14b8a6;
-  --color-brand-light:   #2dd4bf;
-  --color-brand-dark:    #0d9488;
-  --color-brand-dim:     #08272b;
-  --color-brand-text:    #ccfbf1;
-  --color-brand-border:  #0f766e;
+  /* ── Brand — Court Navy (sole decorative accent) ────────────────── */
+  --color-brand:         #1B2B5C;
+  --color-brand-hover:   #152348;
+  --color-brand-pressed: #0F1A37;
+  --color-brand-light:   #5B7BD0;
+  --color-brand-tint:    #E8EDF7;
+  --color-brand-text:    #FFFFFF;
+  --color-brand-dim:     #E8EDF7;
+  --color-brand-border:  #5B7BD0;
+  --color-brand-dark:    #0F1A37;
 
-  /* ── Severity ───────────────────────────────────────────────────── */
-  --color-critical:      #ef4444;
-  --color-critical-bg:   #20090c;
-  --color-critical-text: #fca5a5;
-  --color-critical-border: #7f1d1d;
+  /* ── Severity (functional, light-retoned) ───────────────────────── */
+  --color-critical:        #B42318;
+  --color-critical-bg:     #FEF3F2;
+  --color-critical-text:   #7A1612;
+  --color-critical-border: #FECDCA;
 
-  --color-high:          #f97316;
-  --color-high-bg:       #251005;
-  --color-high-text:     #fdba74;
-  --color-high-border:   #9a3412;
+  --color-high:            #DC6803;
+  --color-high-bg:         #FFFAEB;
+  --color-high-text:       #B54708;
+  --color-high-border:     #FEDF89;
 
-  --color-medium:        #f59e0b;
-  --color-medium-bg:     #211606;
-  --color-medium-text:   #fcd34d;
-  --color-medium-border: #92400e;
+  --color-medium:          #CA8A04;
+  --color-medium-bg:       #FEFCE8;
+  --color-medium-text:     #854A0E;
+  --color-medium-border:   #FDE68A;
 
-  --color-low:           #22c55e;
-  --color-low-bg:        #062313;
-  --color-low-text:      #86efac;
-  --color-low-border:    #166534;
+  --color-low:             #067647;
+  --color-low-bg:          #ECFDF3;
+  --color-low-text:        #085D3A;
+  --color-low-border:      #ABEFC6;
 
   /* ── Semantic ───────────────────────────────────────────────────── */
-  --color-info:          #38bdf8;
-  --color-info-bg:       #061826;
-  --color-info-text:     #bae6fd;
-  --color-trust:         #22d3ee;
-  --color-success:       #22c55e;
+  --color-info:          #175CD3;
+  --color-info-bg:       #EFF8FF;
+  --color-info-text:     #175CD3;
+  --color-trust:         #0E7C86;
+  --color-success:       #067647;
 
-  /* ── Legacy aliases (backward compat for pre-rebrand components) ─── */
-  --color-amber:         var(--color-brand);
-  --color-amber-light:   var(--color-brand-light);
-  --color-amber-dim:     var(--color-brand-dim);
-  --color-amber-text:    var(--color-brand-text);
-  --color-amber-border:  var(--color-brand-border);
-  --color-primary:        #f8fafc;
-  --color-primary-dark:   #07131f;
-  --color-secondary:      #9ca3af;
-  --color-muted:          #64748b;
+  /* ── Legacy aliases — old names kept rendering during migration ──
+     Old: --color-bg, --color-amber*, --color-primary*, etc.
+     Maps each pre-rebrand name to the closest new value. Removal
+     happens only after the full visual audit passes. */
+  --color-bg:             var(--color-canvas);
+  --color-surface-4:      var(--color-surface-3);
+  --color-amber:          var(--color-brand);
+  --color-amber-light:    var(--color-brand-light);
+  --color-amber-dim:      var(--color-brand-tint);
+  --color-amber-text:     var(--color-text);
+  --color-amber-border:   var(--color-brand-border);
+  --color-primary:        var(--color-text);
+  --color-primary-dark:   var(--color-text-inv);
+  --color-secondary:      var(--color-text-2);
+  --color-muted:          var(--color-text-3);
   --color-accent:         var(--color-brand);
-  --color-accent-alert:   #ef4444;
-  --color-accent-trust:   #22d3ee;
-  --color-accent-dim:     var(--color-brand-dim);
-  --color-accent-subtle:  var(--color-brand-dim);
-  --color-error:          #ef4444;
-  --color-surface-base:   var(--color-bg);
+  --color-accent-alert:   var(--color-critical);
+  --color-accent-trust:   var(--color-trust);
+  --color-accent-dim:     var(--color-brand-tint);
+  --color-accent-subtle:  var(--color-brand-tint);
+  --color-error:          var(--color-critical);
+  --color-surface-base:   var(--color-canvas);
   --color-surface-card:   var(--color-surface);
-  --color-surface-subtle: var(--color-surface);
-  --color-newsprint:      var(--color-bg);
+  --color-surface-subtle: var(--color-surface-2);
+  --color-newsprint:      var(--color-canvas);
   --color-newsprint-subtle: var(--color-surface);
   --color-surface-hover:  var(--color-surface-2);
   --color-surface-active: var(--color-surface-3);
@@ -94,70 +104,76 @@
   --color-text-inverse:   var(--color-text-inv);
   --color-border-light:   var(--color-border);
   --color-border-medium:  var(--color-border-strong);
-  --color-focus:          var(--color-brand-light);
-  --color-sidebar-text:       var(--color-text-2);
-  --color-sidebar-hover:      var(--color-surface-3);
-  --color-sidebar-text-active: var(--color-text);
-  --color-warning:            var(--color-medium);
-  --color-destructive:        var(--color-critical);
+  --color-focus:          var(--color-brand);
+  --color-sidebar-text:        var(--color-text-2);
+  --color-sidebar-hover:       var(--color-surface-2);
+  --color-sidebar-text-active: var(--color-brand);
+  --color-warning:             var(--color-medium);
+  --color-destructive:         var(--color-critical);
 
-  /* ── Entity / Graph Colors ──────────────────────────────────────── */
-  --color-entity-person:      #a78bfa;
-  --color-entity-company:     #14b8a6;
-  --color-entity-org:         #60a5fa;
-  --color-entity-unknown:     #64748b;
+  /* ── Entity / Graph Colors (retoned for light) ──────────────────── */
+  --color-entity-person:      #6941C6;
+  --color-entity-company:     #1B2B5C;
+  --color-entity-org:         #175CD3;
+  --color-entity-unknown:     #6B7280;
 
   /* ── Event Type Colors ───────────────────────────────────────────── */
-  --color-event-licitacao:     #38bdf8;
-  --color-event-contrato:      #a78bfa;
-  --color-event-sancao:        #ef4444;
-  --color-event-transferencia: #14b8a6;
-  --color-event-emenda:        #22c55e;
+  --color-event-licitacao:     #175CD3;
+  --color-event-contrato:      #6941C6;
+  --color-event-sancao:        #B42318;
+  --color-event-transferencia: #0E7C86;
+  --color-event-emenda:        #067647;
 
   /* ── Edge Colors ─────────────────────────────────────────────────── */
-  --color-edge-compra:         #38bdf8;
-  --color-edge-favorecido:     #ef4444;
-  --color-edge-copart:         #a78bfa;
-  --color-edge-copartsup:      #8080c0;
-  --color-edge-coparorg:       #9070d0;
-  --color-edge-socio:          #22c55e;
-  --color-edge-same-socio:     #14b8a6;
-  --color-edge-address:        #64748b;
-  --color-edge-phone:          #64748b;
-  --color-edge-acct:           #64748b;
-  --color-edge-subsidiary:     #a78bfa;
-  --color-edge-default:        #31516d;
+  --color-edge-compra:         #175CD3;
+  --color-edge-favorecido:     #B42318;
+  --color-edge-copart:         #6941C6;
+  --color-edge-copartsup:      #8B5CF6;
+  --color-edge-coparorg:       #7C3AED;
+  --color-edge-socio:          #067647;
+  --color-edge-same-socio:     #0E7C86;
+  --color-edge-address:        #6B7280;
+  --color-edge-phone:          #6B7280;
+  --color-edge-acct:           #6B7280;
+  --color-edge-subsidiary:     #6941C6;
+  --color-edge-default:        #CBD2D9;
 
   /* ── Role Badge Colors ───────────────────────────────────────────── */
-  --color-role-buyer:          #38bdf8;
-  --color-role-supplier:       #14b8a6;
-  --color-role-winner:         #22c55e;
-  --color-role-sanctioned:     #ef4444;
-  --color-role-beneficiary:    #a78bfa;
+  --color-role-buyer:          #175CD3;
+  --color-role-supplier:       #1B2B5C;
+  --color-role-winner:         #067647;
+  --color-role-sanctioned:     #B42318;
+  --color-role-beneficiary:    #6941C6;
 
-  /* ── Radius ──────────────────────────────────────────────────────── */
-  --radius-xs:  2px;
-  --radius-sm:  4px;
-  --radius-md:  6px;
-  --radius-lg:  8px;
-  --radius-xl:  12px;
-  --radius-2xl: 16px;
+  /* ── Radii ──────────────────────────────────────────────────────── */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:  10px;
+  --radius-xl:  14px;
+  --radius-2xl: 20px;
   --radius-full: 9999px;
 
-  /* ── Shadows (dark-optimized) ────────────────────────────────────── */
-  --shadow-xs:  0 1px 2px 0 rgba(0,0,0,0.45);
-  --shadow-sm:  0 1px 3px 0 rgba(0,0,0,0.45), 0 1px 2px -1px rgba(0,0,0,0.35);
-  --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.45), 0 2px 4px -2px rgba(0,0,0,0.35);
-  --shadow-lg:  0 10px 18px -4px rgba(0,0,0,0.55), 0 6px 12px -6px rgba(0,0,0,0.35);
-  --shadow-xl:  0 20px 25px -5px rgba(0,0,0,0.55), 0 8px 10px -6px rgba(0,0,0,0.35);
-  --shadow-brand: 0 0 0 1px rgba(45,212,191,0.20), 0 8px 24px rgba(20,184,166,0.16);
+  /* ── Shadows (light-theme dual-layer) ───────────────────────────── */
+  --shadow-xs:   0 1px 2px 0 rgba(16,24,40,0.05);
+  --shadow-sm:   0 1px 3px 0 rgba(16,24,40,0.10), 0 1px 2px -1px rgba(16,24,40,0.06);
+  --shadow-md:   0 4px 8px -2px rgba(16,24,40,0.10), 0 2px 4px -2px rgba(16,24,40,0.06);
+  --shadow-lg:   0 12px 16px -4px rgba(16,24,40,0.08), 0 4px 6px -2px rgba(16,24,40,0.03);
+  --shadow-xl:   0 20px 24px -4px rgba(16,24,40,0.08), 0 8px 8px -4px rgba(16,24,40,0.03);
+  --shadow-card: 0 1px 3px 0 rgba(16,24,40,0.06), 0 1px 2px 0 rgba(16,24,40,0.04);
+  --shadow-brand: 0 0 0 1px rgba(27,43,92,0.10), 0 8px 24px rgba(27,43,92,0.08);
   --shadow-amber: var(--shadow-brand);
-  --shadow-glow: 0 0 24px rgba(20,184,166,0.20);
+  --shadow-glow:  0 0 24px rgba(27,43,92,0.10);
 
   /* ── Layout ──────────────────────────────────────────────────────── */
   --sidebar-width: 220px;
-  --topbar-height: 48px;
-  --header-height: var(--topbar-height); /* legacy alias */
+  --topbar-height: 56px;
+  --header-height: var(--topbar-height);
+
+  /* ── Mode tokens (set per page via .ow-mode-* class — see Task 12) ─ */
+  --section-pad-y:  24px;
+  --container-max:  100%;
+  --content-pad-x:  24px;
 }
 
 /* ─── Base Reset ─────────────────────────────────────────────────── */
