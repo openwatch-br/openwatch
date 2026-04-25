@@ -287,6 +287,39 @@ body {
 /* ─── Component Layer ────────────────────────────────────────────── */
 @layer components {
 
+  /* ── Layout Modes ──────────────────────────────────────────────── */
+  /* Editorial — home, methodology, marketing surfaces.
+     Generous whitespace, max 1200px container. */
+  .ow-mode-editorial {
+    --section-pad-y: 80px;
+    --container-max: 1200px;
+    --content-pad-x: 32px;
+  }
+  @media (max-width: 1024px) {
+    .ow-mode-editorial { --section-pad-y: 64px; }
+  }
+  @media (max-width: 768px) {
+    .ow-mode-editorial { --section-pad-y: 48px; --content-pad-x: 20px; }
+  }
+
+  /* Working — radar/dossie/signal/investigation/coverage/entity/org/case.
+     Information density preserved. Full content width minus sidebar. */
+  .ow-mode-working {
+    --section-pad-y: 24px;
+    --container-max: 100%;
+    --content-pad-x: 24px;
+  }
+
+  /* Section + container utilities driven by mode tokens */
+  .ow-section { padding-top: var(--section-pad-y); padding-bottom: var(--section-pad-y); }
+  .ow-container {
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding-left: var(--content-pad-x);
+    padding-right: var(--content-pad-x);
+    width: 100%;
+  }
+
   /* ── Layout ────────────────────────────────────────────────────── */
   .ow-page {
     display: flex;
@@ -302,8 +335,8 @@ body {
 
   .ow-content {
     flex: 1;
-    padding: 24px 24px 48px;
-    max-width: 1400px;
+    padding: 24px var(--content-pad-x) 48px;
+    max-width: var(--container-max);
     width: 100%;
     margin: 0 auto;
   }
