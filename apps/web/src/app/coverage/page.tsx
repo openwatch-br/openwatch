@@ -1815,7 +1815,7 @@ export default function CoveragePage() {
   }, [sources, search, statusFilter]);
 
   return (
-    <div className="ow-content">
+    <div className="ow-mode-working ow-content">
       {/* ── Page Header ─────────────────────────────────────────── */}
       <PageHeader
         eyebrow="SISTEMA"

@@ -144,7 +144,7 @@ const WHAT_WE_DONT = [
 
 export default function CompliancePage() {
   return (
-    <div className="ow-content">
+    <div className="ow-mode-editorial ow-content">
       <div>
         <PageHeader
           eyebrow="COMPLIANCE"

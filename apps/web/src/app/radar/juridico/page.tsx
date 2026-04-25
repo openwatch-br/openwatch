@@ -19,7 +19,7 @@ export default function JuridicoPage() {
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6">
+    <div className="ow-mode-working mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6">
       <RadarBreadcrumb crumbs={[
         { label: "Radar", href: "/radar" },
         { label: "Juridico" },
