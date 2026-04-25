@@ -56,11 +56,10 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className="dark"
       suppressHydrationWarning
     >
       <head>
-        <meta name="color-scheme" content="dark" />
+        <meta name="color-scheme" content="light" />
       </head>
       <body
         className={`${inter.variable} ${geist.variable} ${geistMono.variable}`}
@@ -68,7 +67,7 @@ export default function RootLayout({
         {/* Skip-to-content — WCAG 2.4.1 */}
         <a
           href="#main-content"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:inline-flex focus:items-center focus:gap-2 focus:rounded focus:bg-[var(--color-amber)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--color-text-inv)] focus:outline-none"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:inline-flex focus:items-center focus:gap-2 focus:rounded focus:bg-[var(--color-brand)] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[var(--color-text-inv)] focus:outline-none"
         >
           Ir para o conteúdo principal
         </a>
