@@ -179,7 +179,7 @@ export function CoverageSourcePreviewDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-[rgba(10,17,41,0.45)] backdrop-blur-sm"
         onClick={onClose}
       />
 

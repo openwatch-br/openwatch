@@ -35,7 +35,7 @@ export function Modal({ open, onClose, title, children, className, closeLabel = 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div ref={overlayRef} className="absolute inset-0 bg-black/45" onClick={onClose} />
+      <div ref={overlayRef} className="absolute inset-0 bg-[rgba(10,17,41,0.45)]" onClick={onClose} />
 
       <div
         role="dialog"

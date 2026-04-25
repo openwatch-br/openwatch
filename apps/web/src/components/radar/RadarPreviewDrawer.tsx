@@ -102,7 +102,7 @@ export function RadarPreviewDrawer({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(10,17,41,0.45)] p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

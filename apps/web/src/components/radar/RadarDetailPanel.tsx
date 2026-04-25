@@ -109,7 +109,7 @@ export function RadarDetailPanel({
       {/* Mobile backdrop */}
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+          className="fixed inset-0 z-30 bg-[rgba(10,17,41,0.45)] lg:hidden"
           onClick={onClose}
         />
       )}

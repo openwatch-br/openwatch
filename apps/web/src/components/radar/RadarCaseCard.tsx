@@ -8,10 +8,10 @@ import { formatBRL } from "@/lib/utils";
 import { RadarSignalRow } from "./RadarSignalRow";
 
 const SEV: Record<string, { flagBg: string; label: string; accentColor: string }> = {
-  critical: { flagBg: "bg-severity-critical text-white", label: "Crítico", accentColor: "var(--color-critical, #ef4444)" },
-  high:     { flagBg: "bg-severity-high text-white",     label: "Alto",    accentColor: "var(--color-high, #f97316)"    },
-  medium:   { flagBg: "bg-severity-medium text-white",   label: "Médio",   accentColor: "var(--color-medium, #eab308)"  },
-  low:      { flagBg: "bg-severity-low text-white",      label: "Baixo",   accentColor: "var(--color-low, #0ea5e9)"     },
+  critical: { flagBg: "bg-[var(--color-critical)] text-[var(--color-text-inv)]", label: "Crítico", accentColor: "var(--color-critical)" },
+  high:     { flagBg: "bg-[var(--color-high)] text-[var(--color-text-inv)]",     label: "Alto",    accentColor: "var(--color-high)"     },
+  medium:   { flagBg: "bg-[var(--color-medium)] text-[var(--color-text-inv)]",   label: "Médio",   accentColor: "var(--color-medium)"   },
+  low:      { flagBg: "bg-[var(--color-low)] text-[var(--color-text-inv)]",      label: "Baixo",   accentColor: "var(--color-low)"      },
 };
 
 interface RadarCaseCardProps {

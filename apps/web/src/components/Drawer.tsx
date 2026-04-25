@@ -33,7 +33,7 @@ export function Drawer({ open, onClose, title, children, width = "w-96", classNa
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
+      <div className="absolute inset-0 bg-[rgba(10,17,41,0.45)]" onClick={onClose} />
       <aside
         className={cn(
           "relative h-full bg-[var(--color-surface-card)] border-l border-[var(--color-border-light)] p-4 shadow-[var(--shadow-xl)] overflow-auto",

@@ -4,10 +4,10 @@ import type { RadarV2SignalItem, SignalSeverity } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const SEVERITY_COLORS: Record<SignalSeverity, string> = {
-  critical: "bg-error text-white",
-  high: "bg-warning text-white",
-  medium: "bg-amber-500 text-white",
-  low: "bg-info text-white",
+  critical: "bg-[var(--color-critical)] text-[var(--color-text-inv)]",
+  high:     "bg-[var(--color-high)] text-[var(--color-text-inv)]",
+  medium:   "bg-[var(--color-medium)] text-[var(--color-text-inv)]",
+  low:      "bg-[var(--color-low)] text-[var(--color-text-inv)]",
 };
 
 const SEVERITY_LABELS: Record<SignalSeverity, string> = {

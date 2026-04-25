@@ -137,7 +137,7 @@ function SignalCard({
             <span className={cn("font-mono text-[10px] opacity-70", s.text)}>Confiança</span>
             <span className={cn("font-mono text-xs font-bold", s.text)}>{pct}%</span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--color-border-strong)]">
             <div className={cn("h-full transition-all", pctColor)} style={{ width: `${pct}%` }} />
           </div>
         </div>
@@ -173,7 +173,7 @@ function SignalCard({
               return (
                 <span
                   key={key}
-                  className={cn("rounded-full border px-2.5 py-1 font-mono text-[10px] bg-black/10 opacity-80", s.border, s.text)}
+                  className={cn("rounded-full border px-2.5 py-1 font-mono text-[10px] bg-[var(--color-surface-2)] opacity-80", s.border, s.text)}
                 >
                   {label}
                 </span>
@@ -191,7 +191,7 @@ function SignalCard({
           href={`/radar/dossie/${caseId}/sinal/${signal.id}`}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-xl border px-4 py-2 font-mono text-xs font-bold transition-all hover:opacity-80",
-            s.border, s.text, "bg-black/10",
+            s.border, s.text, "bg-[var(--color-surface-2)]",
           )}
         >
           Ver sinal completo <ArrowRight className="h-3 w-3" />

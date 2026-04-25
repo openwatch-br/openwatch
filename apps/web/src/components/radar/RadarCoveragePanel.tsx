@@ -21,7 +21,7 @@ export function RadarCoveragePanel({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-[1px]">
+    <div className="fixed inset-0 z-50 flex justify-end bg-[rgba(10,17,41,0.45)] backdrop-blur-[1px]">
       <div className="h-full w-full max-w-xl overflow-y-auto border-l border-border bg-surface-card p-4">
         <div className="flex items-center justify-between">
           <h3 className="font-display text-xl font-bold text-primary">

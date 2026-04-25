@@ -41,7 +41,7 @@ export function Header() {
       {open && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-[rgba(10,17,41,0.45)] backdrop-blur-sm md:hidden"
             onClick={() => setOpen(false)}
           />
           <nav
