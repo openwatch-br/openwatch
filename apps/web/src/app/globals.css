@@ -812,10 +812,8 @@ body {
 
   /* ── Badge ─────────────────────────────────────────────────────── */
   .ow-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 7px;
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
     border-radius: var(--radius-full);
     font-size: 0.6875rem;
     font-weight: 600;
@@ -826,23 +824,21 @@ body {
     line-height: 1.5;
   }
 
-  .ow-badge-critical  { background: var(--color-critical-bg);  color: var(--color-critical-text);  border-color: var(--color-critical-border); }
-  .ow-badge-high      { background: var(--color-high-bg);      color: var(--color-high-text);      border-color: var(--color-high-border); }
-  .ow-badge-medium    { background: var(--color-medium-bg);    color: var(--color-medium-text);    border-color: var(--color-medium-border); }
-  .ow-badge-low       { background: var(--color-low-bg);       color: var(--color-low-text);       border-color: var(--color-low-border); }
-  .ow-badge-info      { background: var(--color-info-bg);      color: var(--color-info-text);      border-color: #1e3a5f; }
-  .ow-badge-neutral   { background: var(--color-surface-3);    color: var(--color-text-2);         border-color: var(--color-border-strong); }
-  .ow-badge-amber     { background: var(--color-amber-dim);    color: var(--color-amber-text);     border-color: var(--color-amber-border); }
-  .ow-badge-signal    { background: var(--color-brand-dim);    color: var(--color-brand-text);     border-color: var(--color-brand-border); }
-  .ow-badge-trust     { background: #031218;                    color: #67e8f9;                      border-color: #164e63; }
+  .ow-badge-critical { background: var(--color-critical-bg); color: var(--color-critical-text); border-color: var(--color-critical-border); }
+  .ow-badge-high     { background: var(--color-high-bg);     color: var(--color-high-text);     border-color: var(--color-high-border); }
+  .ow-badge-medium   { background: var(--color-medium-bg);   color: var(--color-medium-text);   border-color: var(--color-medium-border); }
+  .ow-badge-low      { background: var(--color-low-bg);      color: var(--color-low-text);      border-color: var(--color-low-border); }
+  .ow-badge-info     { background: var(--color-info-bg);     color: var(--color-info-text);     border-color: #B2DDFF; }
+  .ow-badge-neutral  { background: var(--color-surface-2);   color: var(--color-text-2);        border-color: var(--color-border); }
+  .ow-badge-amber    { background: var(--color-brand-tint);  color: var(--color-brand);         border-color: var(--color-brand-light); }
+  .ow-badge-signal   { background: var(--color-brand-tint);  color: var(--color-brand);         border-color: var(--color-brand-light); }
+  .ow-badge-trust    { background: #ECFDFD;                  color: var(--color-trust);         border-color: #A5E5E8; }
 
   /* Status dots */
   .ow-status-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
+    display: inline-block; flex-shrink: 0;
   }
   .ow-status-ok      { background: var(--color-low); }
   .ow-status-warning { background: var(--color-medium); }
@@ -853,51 +849,42 @@ body {
   /* ── Input / Form ──────────────────────────────────────────────── */
   .ow-input {
     width: 100%;
-    background: var(--color-surface-3);
+    background: var(--color-canvas);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-family: var(--font-sans);
     font-size: 0.875rem;
-    padding: 7px 11px;
+    padding: 9px 12px;
     transition: border-color 120ms, box-shadow 120ms;
     outline: none;
   }
-
-  .ow-input::placeholder {
-    color: var(--color-text-3);
-  }
-
+  .ow-input::placeholder { color: var(--color-text-3); }
   .ow-input:focus {
     border-color: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+    box-shadow: 0 0 0 3px var(--color-brand-tint);
   }
-
-  .ow-input-icon-left {
-    padding-left: 34px;
-  }
+  .ow-input-icon-left { padding-left: 36px; }
 
   .ow-select {
     width: 100%;
-    background: var(--color-surface-3);
+    background: var(--color-canvas);
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-family: var(--font-sans);
     font-size: 0.875rem;
-    padding: 7px 30px 7px 11px;
+    padding: 9px 32px 9px 12px;
     appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
-    outline: none;
-    cursor: pointer;
+    outline: none; cursor: pointer;
     transition: border-color 120ms;
   }
-
   .ow-select:focus {
     border-color: var(--color-brand);
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
+    box-shadow: 0 0 0 3px var(--color-brand-tint);
   }
 
   .ow-label {
@@ -909,11 +896,7 @@ body {
     letter-spacing: 0.01em;
   }
 
-  .ow-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
+  .ow-field { display: flex; flex-direction: column; gap: 4px; }
 
   /* ── Table ─────────────────────────────────────────────────────── */
   .ow-table-wrapper {
