@@ -32,6 +32,11 @@ export const metadata: Metadata = {
   },
   description:
     "Plataforma pública e open-source de auditoria cidadã sobre dados do governo federal brasileiro. Sinais de risco, evidências e investigações baseadas em dados abertos.",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+  },
   keywords: [
     "auditoria cidadã", "corrupção", "licitação", "governo federal",
     "dados abertos", "transparência", "Brasil", "PNCP", "ComprasGov",
