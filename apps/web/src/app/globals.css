@@ -513,84 +513,66 @@ body {
   .ow-page-header {
     position: relative;
     padding: 24px 0 20px;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-brand) 18%, var(--color-border));
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: 24px;
   }
 
+  /* Editorial-mode hero variant (used by home / methodology) */
   .ow-page-header-hero {
-    padding: 20px 22px;
-    border: 1px solid color-mix(in srgb, var(--color-brand) 24%, var(--color-border));
-    border-radius: calc(var(--radius-lg) + 4px);
-    background:
-      radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 42%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 94%, white 6%), color-mix(in srgb, var(--color-surface-2) 96%, var(--color-brand-dim) 4%));
-    box-shadow: 0 10px 30px rgba(2, 8, 23, 0.12);
+    padding: 32px 32px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
   }
 
-  .ow-page-header::after {
-    content: "";
-    position: absolute;
-    left: 0;
-    bottom: -1px;
-    width: 88px;
-    height: 2px;
-    background: linear-gradient(90deg, var(--color-brand), var(--color-brand-light));
-    border-radius: 999px;
-  }
-
-  .ow-page-header-hero::after {
-    left: 22px;
-  }
+  /* Removed: ::after accent bar — decorative, replaced by clean border */
 
   .ow-page-header-icon {
-    width: 44px;
-    height: 44px;
+    width: 44px; height: 44px;
     flex-shrink: 0;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-brand-dim);
-    border: 1px solid color-mix(in srgb, var(--color-brand) 28%, var(--color-border));
-    color: var(--color-brand-light);
-    box-shadow: var(--shadow-brand);
+    border-radius: var(--radius-lg);
+    display: flex; align-items: center; justify-content: center;
+    background: var(--color-brand-tint);
+    border: 1px solid var(--color-brand-light);
+    color: var(--color-brand);
   }
 
   .ow-page-header-icon-hero {
-    width: 48px;
-    height: 48px;
-    background:
-      radial-gradient(circle at 30% 30%, rgba(45, 212, 191, 0.24), transparent 65%),
-      linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(8, 39, 43, 0.96));
+    width: 48px; height: 48px;
+    background: var(--color-brand);
+    border: none;
+    color: var(--color-brand-text);
   }
 
   .ow-page-header-eyebrow {
     font-size: 0.6875rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--color-brand-light);
+    color: var(--color-brand);
     margin-bottom: 6px;
   }
 
   .ow-page-header-title {
     font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 700;
+    font-size: 1.75rem;
+    font-weight: 500;
     color: var(--color-text);
     letter-spacing: -0.02em;
     line-height: 1.2;
     margin-bottom: 6px;
   }
 
+  /* Editorial hero gets the full Meta-scale clamp */
   .ow-page-header-hero .ow-page-header-title {
-    font-size: clamp(1.625rem, 2.4vw, 2.25rem);
+    font-size: clamp(1.75rem, 3vw, 3rem);   /* up to 48px display-2xl */
   }
 
   .ow-page-header-desc {
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: var(--color-text-2);
-    line-height: 1.5;
+    line-height: 1.55;
     max-width: 72ch;
   }
 
@@ -600,53 +582,34 @@ body {
     gap: 10px;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid color-mix(in srgb, var(--color-brand) 14%, var(--color-border));
+    border-top: 1px solid var(--color-border);
   }
 
   .ow-page-header-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 10px 12px;
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 12px 14px;
     border-radius: var(--radius-md);
     border: 1px solid var(--color-border);
-    background: color-mix(in srgb, var(--color-surface-2) 88%, var(--color-brand-dim) 12%);
+    background: var(--color-canvas);
   }
-
-  .ow-page-header-stat[data-tone="brand"] {
-    border-color: color-mix(in srgb, var(--color-brand) 28%, var(--color-border));
-  }
-
-  .ow-page-header-stat[data-tone="success"] {
-    border-color: var(--color-low-border);
-    background: color-mix(in srgb, var(--color-low-bg) 72%, var(--color-surface) 28%);
-  }
-
-  .ow-page-header-stat[data-tone="warning"] {
-    border-color: var(--color-amber-border);
-    background: color-mix(in srgb, var(--color-amber-dim) 76%, var(--color-surface) 24%);
-  }
-
-  .ow-page-header-stat[data-tone="danger"] {
-    border-color: var(--color-critical-border);
-    background: color-mix(in srgb, var(--color-critical-bg) 78%, var(--color-surface) 22%);
-  }
+  .ow-page-header-stat[data-tone="brand"]   { border-color: var(--color-brand-light); background: var(--color-brand-tint); }
+  .ow-page-header-stat[data-tone="success"] { border-color: var(--color-low-border);  background: var(--color-low-bg); }
+  .ow-page-header-stat[data-tone="warning"] { border-color: var(--color-medium-border); background: var(--color-medium-bg); }
+  .ow-page-header-stat[data-tone="danger"]  { border-color: var(--color-critical-border); background: var(--color-critical-bg); }
 
   .ow-page-header-stat-label {
     font-size: 0.6875rem;
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--color-text-3);
   }
-
   .ow-page-header-stat-value {
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 1.05rem;
+    font-weight: 600;
     color: var(--color-text);
     line-height: 1.3;
   }
-
   .ow-page-header-stat-sub {
     font-size: 0.6875rem;
     color: var(--color-text-3);
@@ -1439,25 +1402,22 @@ body {
     padding: 16px 16px 16px 20px;
   }
 
+  /* ── Masthead (working-mode page header for radar/dossie/etc) ──── */
   .ow-masthead {
     position: relative;
     overflow: hidden;
-    background: var(--color-surface-2);
-    border-bottom: 1px solid var(--color-border);
-    padding: 28px 32px 24px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 24px 28px 22px;
   }
   .ow-masthead-severity-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
     background: var(--severity-color, var(--color-brand));
   }
   .ow-masthead-eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: flex; align-items: center; gap: 8px;
     margin-bottom: 12px;
     font-family: var(--font-mono);
     font-size: 0.6875rem;
@@ -1467,26 +1427,20 @@ body {
   }
   .ow-masthead-title {
     font-family: var(--font-display);
-    font-size: clamp(1.25rem, 3vw, 1.75rem);
-    font-weight: 700;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);     /* working cap = 28px */
+    font-weight: 500;
     line-height: 1.25;
     letter-spacing: -0.02em;
     color: var(--color-text);
     margin-bottom: 8px;
   }
   .ow-masthead-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
+    display: flex; flex-wrap: wrap; gap: 20px;
     margin-top: 16px;
     padding-top: 16px;
     border-top: 1px solid var(--color-border);
   }
-  .ow-masthead-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+  .ow-masthead-meta-item { display: flex; flex-direction: column; gap: 2px; }
   .ow-masthead-meta-label {
     font-family: var(--font-mono);
     font-size: 0.625rem;
