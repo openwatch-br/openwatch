@@ -28,7 +28,8 @@ export function OpenWatchLogoMark({
   variant = "default",
 }: OpenWatchLogoMarkProps) {
   const px = sizeMap[size];
-  const stroke = variant === "inverse" ? "var(--color-brand-text)" : "var(--color-brand)";
+  // .ow-brand-mark paints an amber ground — rings must use the inverse tone on it
+  const stroke = variant === "inverse" ? "var(--color-brand)" : "var(--color-brand-text)";
 
   return (
     <span

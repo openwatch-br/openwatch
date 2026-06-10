@@ -36,7 +36,7 @@ export default function NotFound() {
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-primary-dark)] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2"
+          className="inline-flex items-center gap-2 rounded-[var(--radius-sm)] bg-[var(--color-brand)] px-5 py-2.5 text-sm font-semibold text-[var(--color-text-inv)] transition-all duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Ir para o início

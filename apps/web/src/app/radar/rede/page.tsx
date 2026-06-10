@@ -65,7 +65,7 @@ export default function NetworkSearchPage() {
               type="button"
               onClick={doSearch}
               disabled={loading || !query.trim()}
-              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-white hover:bg-accent/90 transition-colors disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-3 text-sm font-semibold text-[var(--color-text-inv)] hover:bg-accent/90 transition-colors disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
             </button>

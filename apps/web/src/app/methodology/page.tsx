@@ -135,7 +135,7 @@ export default async function MethodologyPage() {
   );
 
   return (
-    <div className="ow-mode-editorial ow-content">
+    <div className="ow-mode-editorial ow-content ow-prose">
       {/* ── Page Header ─────────────────────────────────────────── */}
       <PageHeader
         eyebrow="METODOLOGIA"

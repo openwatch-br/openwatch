@@ -70,7 +70,7 @@ function EntityMiniCard({ entity }: { entity: TimelineEntityDTO }) {
           <img src={photoUrl} alt={entity.name} className="h-8 w-8 shrink-0 rounded-lg object-cover" />
         ) : (
           <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-[var(--color-text-inv)]"
             style={{ backgroundColor: col }}
           >
             {initials(entity.name)}

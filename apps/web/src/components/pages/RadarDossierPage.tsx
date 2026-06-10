@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { getDossierTimeline, getDossierSummary } from "@/lib/api";
 import { formatBRL, formatDate } from "@/lib/utils";
@@ -9,6 +9,9 @@ import type {
   DossierTimelineResponse,
   DossierSummaryResponse,
 } from "@/lib/types";
+import { DossieBookContext } from "@/components/dossie/DossieBookContext";
+import DossieJuridicoPage from "@/components/pages/DossieJuridicoPage";
+import DossieRedePage from "@/components/pages/DossieRedePage";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -25,7 +28,7 @@ const SEV_LABEL: Record<string, string> = {
   low: "BAIXO",
 };
 
-type DossierTab = "dossie" | "sinais" | "cronologia" | "entidades" | "hipoteses";
+type DossierTab = "dossie" | "sinais" | "cronologia" | "entidades" | "hipoteses" | "juridico" | "rede";
 
 const EVENT_TYPE_LABEL: Record<string, string> = {
   licitacao: "Licitação",
@@ -1203,6 +1206,13 @@ export default function RadarDossierPage() {
       .finally(() => setLoading(false));
   }, [caseId]);
 
+  // Context value for sub-components that consume useDossieBook()
+  // Must be declared before any early returns (Rules of Hooks).
+  const bookContextValue = useMemo(
+    () => ({ data: timeline, loading: false, error: null, pages: [], currentIndex: -1 }),
+    [timeline],
+  );
+
   function setTab(t: DossierTab) {
     const p = new URLSearchParams(searchParams.toString());
     p.set("tab", t);
@@ -1225,6 +1235,8 @@ export default function RadarDossierPage() {
       label: "Hipóteses Legais",
       count: timeline.legal_hypotheses.length,
     },
+    { key: "rede", label: "Rede de Conexões" },
+    { key: "juridico", label: "Jurídico", count: timeline.legal_hypotheses.length },
   ];
 
   return (
@@ -1448,6 +1460,12 @@ export default function RadarDossierPage() {
         {tab === "entidades" && <EntidadesTab entities={timeline.entities} />}
         {tab === "hipoteses" && (
           <HipotesesTab hypotheses={timeline.legal_hypotheses} />
+        )}
+        {(tab === "juridico" || tab === "rede") && (
+          <DossieBookContext.Provider value={bookContextValue}>
+            {tab === "juridico" && <DossieJuridicoPage />}
+            {tab === "rede" && <DossieRedePage />}
+          </DossieBookContext.Provider>
         )}
       </div>
     </div>

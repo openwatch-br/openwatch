@@ -3,10 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import type { ElementType } from "react";
 import {
-  ArrowLeft, AlertTriangle, Building2, User, Database,
-  FileText, ChevronLeft, ChevronRight, Hash, TrendingUp,
+  ArrowLeft, AlertTriangle, User, Database,
+  ChevronLeft, ChevronRight, Hash, TrendingUp,
   Calendar, GitBranch,
 } from "lucide-react";
 import { useDossieBook } from "@/components/dossie/DossieBookContext";
@@ -35,7 +34,7 @@ const SEV = {
 type SevKey = keyof typeof SEV;
 function getSev(sv: string) { return SEV[(sv as SevKey) in SEV ? (sv as SevKey) : "low"]; }
 
-const ENTITY_COL: Record<string, string>    = { org: "#a78bfa", company: "#34D399", person: "#60A5FA" };
+const ENTITY_COL: Record<string, string>    = { org: "var(--color-entity-org)", company: "var(--color-entity-company)", person: "var(--color-entity-person)" };
 const ENTITY_LABEL_MAP: Record<string, string> = { org: "Órgão Público", company: "Empresa", person: "Pessoa Física" };
 
 function initials(name: string) {
@@ -43,29 +42,23 @@ function initials(name: string) {
   return ((p[0]?.[0] ?? "") + (p.length > 1 ? (p[p.length - 1]?.[0] ?? "") : "")).toUpperCase();
 }
 
-function confidenceColor(pct: number) {
-  if (pct >= 80) return "bg-success";
-  if (pct >= 50) return "bg-amber";
-  return "bg-error";
-}
-
 // ── Entity card ──────────────────────────────────────────────────────────────
 
 function EntityCard({ entity, caseId }: { entity: TimelineEntityDTO; caseId: string }) {
-  const col = ENTITY_COL[entity.type] ?? "#a78bfa";
+  const col = ENTITY_COL[entity.type] ?? "var(--color-entity-person)";
   const photoUrl = typeof entity.attrs.photo_url === "string" ? entity.attrs.photo_url : null;
   const cnpj = entity.identifiers.cnpj;
   const cpf  = entity.identifiers.cpf;
 
   return (
-    <Link href={`/radar/dossie/${caseId}/rede`} className="block">
+    <Link href={`/radar/dossie/${caseId}?tab=rede`} className="block">
       <div className="rounded-xl border border-border bg-surface-card p-4 hover:border-accent/40 transition-colors">
         <div className="mb-2 flex items-center gap-3">
           {photoUrl ? (
             <img src={photoUrl} alt={entity.name} className="h-9 w-9 shrink-0 rounded-xl object-cover" />
           ) : (
             <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-[var(--color-text-inv)]"
               style={{ backgroundColor: col }}
             >
               {initials(entity.name)}
@@ -167,7 +160,7 @@ export default function SinalPage() {
   const s = getSev(signal.severity);
   const isPulsing = signal.severity === "critical" || signal.severity === "high";
   const pct = Math.round(signal.confidence * 100);
-  const pctColor = confidenceColor(pct);
+
 
   // Entities from events that reference this signal
   const entityMap = new Map(data.entities.map((e) => [e.id, e]));
@@ -192,7 +185,7 @@ export default function SinalPage() {
         <div className="mx-auto max-w-6xl px-6 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              href={`/radar/dossie/${caseId}/capitulo/${signal.typology_code}`}
+              href={`/radar/dossie/${caseId}?tab=hipoteses`}
               className={cn("transition-opacity hover:opacity-70", s.text)}
             >
               <ArrowLeft className="h-4 w-4" />

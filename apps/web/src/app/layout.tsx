@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-import { AppSidebar } from "@/components/AppSidebar";
+import { TabNav } from "@/components/TabNav";
 import { Topbar } from "@/components/Topbar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -13,7 +13,7 @@ const inter = Inter({
   display: "swap",
 });
 
-const geist = Geist({
+const geistDisplay = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",
@@ -64,10 +64,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <meta name="color-scheme" content="light" />
+        <meta name="color-scheme" content="dark" />
       </head>
       <body
-        className={`${inter.variable} ${geist.variable} ${geistMono.variable}`}
+        className={`${inter.variable} ${geistDisplay.variable} ${geistMono.variable}`}
       >
         {/* Skip-to-content — WCAG 2.4.1 */}
         <a
@@ -82,14 +82,14 @@ export default function RootLayout({
         {/* Global topbar — all viewports */}
         <Topbar />
 
-        <div className="ow-page" style={{ paddingTop: "var(--topbar-height)" }}>
-          {/* Sidebar — hidden on mobile */}
-          <div className="hidden md:flex md:flex-shrink-0">
-            <Suspense fallback={<div style={{ width: "var(--sidebar-width)" }} aria-hidden="true" />}>
-              <AppSidebar />
-            </Suspense>
-          </div>
+        {/* Tab-pill nav — hidden on mobile (drawer covers it) */}
+        <div className="hidden sm:block fixed top-[var(--topbar-height)] left-0 right-0 z-40">
+          <Suspense fallback={<div className="ow-tabnav" aria-hidden="true" />}>
+            <TabNav />
+          </Suspense>
+        </div>
 
+        <div className="ow-page ow-page-shell">
           <main id="main-content" className="ow-main" tabIndex={-1}>
             {children}
             <SiteFooter />

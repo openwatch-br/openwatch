@@ -239,13 +239,13 @@ export default function DossieJuridicoPage() {
     // Try signal cluster codes first
     for (const code of signalCluster) {
       if (typologyCodes.has(code)) {
-        return `/radar/dossie/${caseId}/capitulo/${code}`;
+        return `/radar/dossie/${caseId}?tab=hipoteses`;
       }
     }
     // Fallback: match from violation_type
     const match = violationType.match(/\bT\d{2}\b/);
     if (match && typologyCodes.has(match[0])) {
-      return `/radar/dossie/${caseId}/capitulo/${match[0]}`;
+      return `/radar/dossie/${caseId}?tab=hipoteses`;
     }
     return null;
   }

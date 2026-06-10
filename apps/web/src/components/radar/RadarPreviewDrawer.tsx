@@ -33,7 +33,7 @@ function getRoleBadgeStyle(role: string): React.CSSProperties {
   try {
     const hex = color.trim();
     if (!hex.startsWith("#")) {
-      return { background: "rgba(112,112,168,0.12)", borderColor: "rgba(112,112,168,0.35)", color: "#9090C0" };
+      return { background: "rgba(110,110,120,0.12)", borderColor: "rgba(110,110,120,0.35)", color: "#A1A1AA" };
     }
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
@@ -44,7 +44,7 @@ function getRoleBadgeStyle(role: string): React.CSSProperties {
       color: hex,
     };
   } catch {
-    return { background: "rgba(112,112,168,0.12)", borderColor: "rgba(112,112,168,0.35)", color: "#9090C0" };
+    return { background: "rgba(110,110,120,0.12)", borderColor: "rgba(110,110,120,0.35)", color: "#A1A1AA" };
   }
 }
 

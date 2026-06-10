@@ -161,7 +161,7 @@ function EntityNode({ data }: NodeProps) {
       <Handle
         type="target"
         position={Position.Left}
-        style={{ background: "#2E2E50", width: 8, height: 8, border: "none" }}
+        style={{ background: "var(--color-border-strong)", width: 8, height: 8, border: "none" }}
       />
 
       <div className="px-3 py-2">
@@ -186,7 +186,7 @@ function EntityNode({ data }: NodeProps) {
       <Handle
         type="source"
         position={Position.Right}
-        style={{ background: "#2E2E50", width: 8, height: 8, border: "none" }}
+        style={{ background: "var(--color-border-strong)", width: 8, height: 8, border: "none" }}
       />
     </div>
   );
@@ -228,7 +228,7 @@ function FlowInner({ rfNodes, rfEdges }: FlowInnerProps) {
       nodesDraggable
       className="bg-surface-base"
     >
-      <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2E2E50" />
+      <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--color-border)" />
       <Controls className="[&>button]:!bg-surface-card [&>button]:!border-border [&>button]:!text-secondary [&>button:hover]:!text-primary [&>button]:!shadow-none" />
       <MiniMap
         nodeColor={(n) => getNodeColor((n.data as EntityNodeData).node_type)}
@@ -293,8 +293,8 @@ export function GraphView({ entityId, height = 480, className }: GraphViewProps)
           strokeDasharray: e.edge_strength === "strong" ? undefined : "5 3",
         },
         label: EDGE_TYPE_LABELS[e.type] ?? e.type,
-        labelStyle: { fontSize: 9, fill: "#94a3b8", fontFamily: "system-ui, sans-serif" },
-        labelBgStyle: { fill: "#0f172a", fillOpacity: 0.85 },
+        labelStyle: { fontSize: 9, fill: "var(--color-text-2)", fontFamily: "var(--font-mono)" },
+        labelBgStyle: { fill: "var(--color-surface-dark)", fillOpacity: 0.85 },
         labelBgPadding: [4, 2] as [number, number],
         labelBgBorderRadius: 3,
         markerEnd: {

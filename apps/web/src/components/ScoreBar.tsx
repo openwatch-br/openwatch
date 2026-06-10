@@ -7,8 +7,8 @@ interface ScoreBarProps {
 export function ScoreBar({ label, value, color = "accent" }: ScoreBarProps) {
   const barColor = {
     accent:  "linear-gradient(90deg, var(--color-brand), var(--color-brand-light))",
-    warning: "linear-gradient(90deg, var(--color-medium), #fcd34d)",
-    error:   "linear-gradient(90deg, var(--color-critical), #fca5a5)",
+    warning: "linear-gradient(90deg, var(--color-medium), var(--color-medium-text))",
+    error:   "linear-gradient(90deg, var(--color-critical), var(--color-critical-text))",
   }[color];
   const clamped = Math.max(0, Math.min(100, value));
   return (

@@ -276,7 +276,7 @@ export function EntityNetworkGraph({ entityId, className }: EntityNetworkGraphPr
               y1={from.y}
               x2={to.x}
               y2={to.y}
-              stroke="#7070A8"
+              stroke="var(--color-edge-default)"
               strokeOpacity={0.3}
               strokeWidth={1}
               strokeDasharray="4 3"
@@ -296,7 +296,7 @@ export function EntityNetworkGraph({ entityId, className }: EntityNetworkGraphPr
               y1={fromP.y}
               x2={toP.x}
               y2={toP.y}
-              stroke="#4b5563"
+              stroke="var(--color-border-strong)"
               strokeOpacity={0.5}
               strokeWidth={1.5}
             />
@@ -341,7 +341,7 @@ export function EntityNetworkGraph({ entityId, className }: EntityNetworkGraphPr
                 r={r}
                 fill={color}
                 fillOpacity={fillOpacity}
-                stroke={p.isCenter ? "#ffffff" : isHovered ? "#ffffff" : "none"}
+                stroke={p.isCenter ? "var(--color-text)" : isHovered ? "var(--color-text)" : "none"}
                 strokeWidth={p.isCenter ? 2 : 1.5}
               />
 
@@ -351,7 +351,7 @@ export function EntityNetworkGraph({ entityId, className }: EntityNetworkGraphPr
                 y={p.y + r + 11}
                 textAnchor="middle"
                 fontSize={9}
-                fill="#94a3b8"
+                fill="var(--color-text-2)"
                 fontWeight={p.isCenter ? "bold" : "normal"}
               >
                 {label}

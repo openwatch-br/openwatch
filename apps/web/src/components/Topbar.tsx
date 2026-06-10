@@ -3,16 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Radar, Radio, Search, Menu, X, BookOpen, Activity, Scale, Eye } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { OpenWatchLogo } from "./OpenWatchLogo";
 
 const MOBILE_NAV = [
   { href: "/radar", label: "Radar de Risco" },
-  { href: "/coverage", icon: Activity, label: "Cobertura" },
-  { href: "/methodology", icon: BookOpen, label: "Metodologia" },
-  { href: "/compliance", icon: Scale, label: "Conformidade" },
-  { href: "/api-health", icon: Eye, label: "Status da API" },
+  { href: "/coverage", label: "Cobertura" },
+  { href: "/methodology", label: "Metodologia" },
+  { href: "/compliance", label: "Conformidade" },
+  { href: "/api-health", label: "Status da API" },
 ];
 
 function triggerCmdK() {
@@ -25,69 +25,38 @@ export function Topbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  const isSignalDomain = pathname?.startsWith("/signal");
-  const isRadarDomain =
-    pathname?.startsWith("/radar") ||
-    (!isSignalDomain &&
-      !pathname?.startsWith("/coverage") &&
-      !pathname?.startsWith("/methodology") &&
-      !pathname?.startsWith("/compliance") &&
-      !pathname?.startsWith("/api-health"));
-
   return (
     <>
       <header className="ow-topbar">
-        {/* Logo */}
+        {/* Brand */}
         <Link href="/" className="ow-topbar-logo" aria-label="OpenWatch — página inicial">
           <OpenWatchLogo size="sm" />
         </Link>
 
-        {/* Domain Switcher */}
-        <div className="ow-domain-switcher hidden sm:flex" role="navigation" aria-label="Domínio">
-          <Link
-            href="/radar"
-            className={clsx("ow-domain-tab", isRadarDomain && "active")}
-            aria-current={isRadarDomain ? "page" : undefined}
-          >
-            <Radar size={13} aria-hidden="true" />
-            Radar
-          </Link>
-          <span
-            className="ow-domain-tab"
-            style={{ opacity: 0.35, cursor: "not-allowed" }}
-            title="Signal Explorer — em breve"
-            aria-disabled="true"
-          >
-            <Radio size={13} aria-hidden="true" />
-            Signal
-            <span
-              className="text-[0.5rem] font-bold uppercase tracking-widest ml-0.5 opacity-80"
-              style={{ color: "var(--color-brand)" }}
-            >
-              soon
-            </span>
-          </span>
-        </div>
-
-        {/* Spacer */}
-        <div className="flex-1" aria-hidden="true" />
-
-        {/* Search */}
+        {/* Global search — opens command palette */}
         <button
-          className="ow-topbar-action hidden sm:flex"
+          type="button"
+          className="ow-topbar-search hidden sm:flex"
           onClick={triggerCmdK}
-          aria-label="Buscar (⌘K)"
+          aria-label="Buscar empresa, pessoa, órgão ou CNPJ (⌘K)"
         >
-          <Search size={14} aria-hidden="true" />
-          <span className="hidden lg:inline text-xs text-[var(--color-text-3)]">Buscar...</span>
-          <kbd className="hidden lg:inline text-[0.625rem] opacity-40 border border-[var(--color-border)] rounded px-1 py-0.5 font-mono">
+          <Search size={14} aria-hidden="true" className="text-[var(--color-text-3)]" />
+          <span className="ow-topbar-search-placeholder">
+            empresa, pessoa, órgão ou CNPJ…
+          </span>
+        </button>
+
+        {/* Hint */}
+        <span className="hidden lg:flex items-center gap-2 pr-4 pl-2 text-xs text-[var(--color-text-3)] whitespace-nowrap">
+          Enter busca
+          <kbd className="text-[0.625rem] opacity-50 border border-[var(--color-border)] rounded px-1 py-0.5 font-mono">
             ⌘K
           </kbd>
-        </button>
+        </span>
 
         {/* Mobile hamburger */}
         <button
-          className="ow-topbar-action sm:hidden"
+          className="ow-topbar-action sm:hidden ml-auto"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label={mobileOpen ? "Fechar menu" : "Abrir menu"}
           aria-expanded={mobileOpen}
@@ -111,27 +80,6 @@ export function Topbar() {
             aria-label="Menu móvel"
           >
             <div className="p-3 flex flex-col gap-1">
-              {/* Domain switcher */}
-              <div className="flex gap-2 pb-3 mb-1 border-b border-[var(--color-border)]">
-                <Link
-                  href="/radar"
-                  className={clsx("ow-domain-tab flex-1 justify-center", isRadarDomain && "active")}
-                  onClick={() => setMobileOpen(false)}
-                >
-                  <Radar size={13} />
-                  Radar
-                </Link>
-                <span
-                  className="ow-domain-tab flex-1 justify-center"
-                  style={{ opacity: 0.35, cursor: "not-allowed" }}
-                  aria-disabled="true"
-                  title="Signal Explorer — em breve"
-                >
-                  <Radio size={13} />
-                  Signal
-                </span>
-              </div>
-
               {/* Search */}
               <button
                 className="ow-nav-item"

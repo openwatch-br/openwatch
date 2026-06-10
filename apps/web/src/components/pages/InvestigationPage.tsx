@@ -187,7 +187,7 @@ export default function InvestigationPage() {
           </p>
           <Link
             href={`/case/${caseId}`}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white transition hover:opacity-90"
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-[var(--color-text-inv)] transition hover:opacity-90"
           >
             <ArrowLeft className="h-4 w-4" />
             Voltar ao caso

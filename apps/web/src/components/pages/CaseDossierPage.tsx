@@ -139,7 +139,7 @@ export default async function DossierPage({ id }: { id: string }) {
         <button
           onClick={undefined}
           type="button"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:opacity-90 print:hidden"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-[var(--color-text-inv)] transition hover:opacity-90 print:hidden"
           // Uses browser print via inline script below
           id="print-btn"
         >

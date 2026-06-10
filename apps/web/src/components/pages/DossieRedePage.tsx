@@ -203,10 +203,10 @@ export default function DossieRedePage() {
         <div className="mx-auto max-w-6xl px-6 py-6">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {[
-              { label: "Entidades", val: graphData.nodes.length, color: "#a78bfa" },
-              { label: "Conexoes", val: graphData.links.length, color: "#6366f1" },
-              { label: "Sinais", val: signals.length, color: "#f59e0b" },
-              { label: "Entidades do Caso", val: entities.length, color: "#34D399" },
+              { label: "Entidades", val: graphData.nodes.length, color: "var(--color-entity-person)" },
+              { label: "Conexoes", val: graphData.links.length, color: "var(--color-info)" },
+              { label: "Sinais", val: signals.length, color: "var(--color-brand)" },
+              { label: "Entidades do Caso", val: entities.length, color: "var(--color-low)" },
             ].map(({ label, val, color }) => (
               <div
                 key={label}
@@ -370,7 +370,7 @@ export default function DossieRedePage() {
                       />
                     ) : (
                       <div
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-[var(--color-text-inv)]"
                         style={{ backgroundColor: col }}
                       >
                         {initials(entity.name)}

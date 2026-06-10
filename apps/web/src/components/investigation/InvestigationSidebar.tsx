@@ -186,7 +186,7 @@ export function InvestigationSidebar({
         {/* Link to entity — modern button style */}
         <Link
           href={`/entity/${node.entity_id}`}
-          className="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-[var(--color-secondary)] text-white px-3 py-2 text-sm font-semibold transition hover:shadow-md hover:shadow-[var(--color-secondary)]/30"
+          className="inline-flex items-center justify-center gap-2 w-full rounded-lg bg-[var(--color-surface-3)] text-[var(--color-text)] border border-[var(--color-border-strong)] px-3 py-2 text-sm font-semibold transition hover:bg-[var(--color-surface-2)]"
         >
           Ver Detalhes da Entidade
           <ExternalLink className="h-4 w-4" />

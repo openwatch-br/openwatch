@@ -32,7 +32,7 @@ export default function CaseError({
         </button>
         <Link
           href="/radar"
-          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
+          className="rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-[var(--color-text-inv)] hover:opacity-90"
         >
           Voltar ao Radar
         </Link>
