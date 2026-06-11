@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { Network } from "lucide-react";
 import { getGraphNeighborhood } from "@/lib/api";
 import { PathFinder } from "./PathFinder";
-import { EntityNetworkGraph } from "@/components/EntityNetworkGraph";
+import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import { TableSkeleton } from "@/components/Skeleton";
 
 interface NetworkSectionProps {
@@ -73,7 +73,7 @@ export function NetworkSection({ initialEntityId }: NetworkSectionProps) {
 
       {!loading && !error && entityId && (
         <div className="rounded-xl border border-border bg-surface-card p-4">
-          <EntityNetworkGraph entityId={entityId} />
+          <EntityEgoGraph entityId={entityId} />
         </div>
       )}
 

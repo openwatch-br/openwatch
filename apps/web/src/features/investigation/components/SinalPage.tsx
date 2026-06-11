@@ -16,7 +16,7 @@ import type {
   SignalEvidencePage,
   SignalProvenanceResponse,
 } from "@/lib/types";
-import { cn, formatBRL, formatDate, normalizeUnknownDisplay, severityNumeric } from "@/lib/utils";
+import { cn, formatBRL, formatCPF, formatDate, normalizeUnknownDisplay, severityNumeric } from "@/lib/utils";
 import { ScoreBar } from "@/components/ScoreBar";
 import { ContestationForm, SignalDisclaimer } from "@/components/ContestationForm";
 
@@ -72,7 +72,7 @@ function EntityCard({ entity, caseId }: { entity: TimelineEntityDTO; caseId: str
           </div>
         </div>
         {cnpj && <p className="font-mono text-[10px] text-muted">CNPJ {cnpj}</p>}
-        {cpf  && <p className="font-mono text-[10px] text-muted">CPF {cpf}</p>}
+        {cpf  && <p className="font-mono text-[10px] text-muted">CPF {formatCPF(cpf)}</p>}
       </div>
     </Link>
   );

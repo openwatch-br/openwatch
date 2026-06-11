@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { getSignalGraph } from "@/lib/api";
-import type { SignalGraphResponse, SignalInvolvedEntityProfile } from "@/lib/types";
+import type { GraphNode, SignalGraphResponse, SignalInvolvedEntityProfile } from "@/lib/types";
 import type { GNode, GLink } from "@/hooks/useCaseGraph";
 import { CONNECTOR_COLORS, CONNECTOR_LABELS } from "@/lib/constants";
-import { InvestigationCanvas } from "@/features/investigation/components/InvestigationCanvas";
+import { mapCaseGraphToSigma } from "@/components/graph/mapCaseGraph";
 import { PageHeader } from "@/components/PageHeader";
 import { DetailSkeleton } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
@@ -26,6 +27,8 @@ import {
   Info,
   ExternalLink,
 } from "lucide-react";
+
+const SigmaGraph = dynamic(() => import("@/components/graph/SigmaGraph"), { ssr: false });
 
 function entityTypeLabel(nodeType: string): string {
   if (nodeType === "org") return "Órgão";
@@ -207,35 +210,19 @@ export default function SignalGraphPage() {
     };
   }, [data, showExpanded]);
 
-  const degreeMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const edge of graphData.links) {
-      map[edge.source] = (map[edge.source] ?? 0) + 1;
-      map[edge.target] = (map[edge.target] ?? 0) + 1;
-    }
-    return map;
-  }, [graphData.links]);
+  // Dados mapeados para o SigmaGraph
+  const sigmaData = useMemo(
+    () => mapCaseGraphToSigma(graphData.nodes, graphData.links),
+    [graphData],
+  );
 
-  const nodeAttrsMap = useMemo(() => {
-    if (!data) return {};
-    const map: Record<string, Record<string, unknown>> = {};
-    for (const node of data.overview.nodes) {
-      map[node.id] = node.attrs || {};
-    }
-    for (const node of data.overview.expanded_nodes ?? []) {
-      map[node.id] = node.attrs || {};
-    }
-    return map;
-  }, [data]);
-
-  const entitySeverityMap = useMemo(() => {
-    if (!data) return {};
-    const map: Record<string, "low" | "medium" | "high" | "critical"> = {};
-    for (const node of data.overview.nodes) {
-      map[node.entity_id] = data.signal.severity;
-    }
-    return map;
-  }, [data]);
+  // SigmaGraph captura o handler no mount — ref mantém a versão mais recente
+  const sigmaClickRef = useRef<(node: GraphNode) => void>(() => {});
+  sigmaClickRef.current = (node) => {
+    const gNode = graphData.nodes.find((n) => n.id === node.id);
+    if (gNode) setSelectedNode(gNode);
+  };
+  const handleSigmaNodeClick = useCallback((node: GraphNode) => sigmaClickRef.current(node), []);
 
   const selectedEntity: SignalInvolvedEntityProfile | null = useMemo(() => {
     if (!data || !selectedNode) return null;
@@ -489,16 +476,11 @@ export default function SignalGraphPage() {
                 minHeight: 480,
               }}
             >
-              <InvestigationCanvas
-                graphData={graphData}
-                degreeMap={degreeMap}
-                entitySeverityMap={entitySeverityMap}
-                nodeAttrsMap={nodeAttrsMap}
-                selectedNodeId={selectedNode?.id ?? null}
-                onNodeClick={(node) => setSelectedNode(node)}
-                onBackgroundClick={() => setSelectedNode(null)}
-                onClearSelected={() => setSelectedNode(null)}
-                onExpandSelected={() => {}}
+              <SigmaGraph
+                nodes={sigmaData.nodes}
+                edges={sigmaData.edges}
+                onNodeClick={handleSigmaNodeClick}
+                className="h-[480px] w-full"
               />
               <div style={{
                 position: 'absolute',

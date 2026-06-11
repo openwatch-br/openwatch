@@ -53,6 +53,9 @@ class NeighborhoodResponse(BaseModel):
     diagnostics: GraphDiagnosticsOut | None = None
     virtual_center_node: VirtualCenterNodeOut | None = None
     co_participants: list[CoParticipantOut] = Field(default_factory=list)
+    # Paginação p/ expansão progressiva (ego-network)
+    total: int = 0
+    offset: int = 0
 
 
 class CaseSignalBrief(BaseModel):

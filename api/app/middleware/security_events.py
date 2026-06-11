@@ -10,6 +10,7 @@ Each event is written via the shared structlog logger with event="security_event
 so it can be forwarded to any log aggregator (Loki, CloudWatch, Datadog, etc.)
 """
 
+import hashlib
 import re
 import time
 
@@ -18,6 +19,15 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from openwatch_utils.logging import log
+
+# Detail reads audited na trilha LGPD (quem acessou o quê).
+# (regex de rota, resource_type) — o último segmento é o resource_id.
+_AUDITED_ROUTES: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"^/public/signal/([0-9a-f-]{36})$"), "signal"),
+    (re.compile(r"^/public/entity/([0-9a-f-]{36})$"), "entity"),
+    (re.compile(r"^/public/case/([0-9a-f-]{36})$"), "case"),
+    (re.compile(r"^/public/graph/neighborhood$"), "neighborhood"),
+]
 
 # Patterns that indicate active probing / attack attempts
 _SUSPICIOUS_PATTERNS: list[tuple[str, str]] = [
@@ -115,6 +125,10 @@ class SecurityEventsMiddleware(BaseHTTPMiddleware):
         # --- Post-request: log security-relevant response codes ---
         status = response.status_code
 
+        # --- LGPD access audit: detail-reads de recursos ligados a pessoas ---
+        if status == 200 and method == "GET":
+            await self._audit_access(request, path, client_ip)
+
         if status == 429:
             log.warning(
                 "security_event",
@@ -160,3 +174,44 @@ class SecurityEventsMiddleware(BaseHTTPMiddleware):
             )
 
         return response
+
+    async def _audit_access(self, request: Request, path: str, client_ip: str) -> None:
+        """Grava trilha de acesso (access_audit) p/ detail-reads públicos.
+
+        Best-effort: falha de auditoria nunca derruba a request.
+        """
+        resource_type = resource_id = None
+        for pattern, rtype in _AUDITED_ROUTES:
+            m = pattern.match(path)
+            if m:
+                resource_type = rtype
+                resource_id = m.group(1) if m.groups() else (
+                    request.query_params.get("entity_id") or None
+                )
+                break
+        if resource_type is None:
+            return
+
+        try:
+            from sqlalchemy import text
+
+            from api.app.db import engine
+
+            ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()
+            async with engine.begin() as conn:
+                await conn.execute(
+                    text("""
+                        INSERT INTO access_audit
+                            (id, actor, route, resource_type, resource_id, ip_hash)
+                        VALUES (gen_random_uuid(), :actor, :route, :rtype, :rid, :ip)
+                    """),
+                    {
+                        "actor": "public",
+                        "route": path[:255],
+                        "rtype": resource_type,
+                        "rid": (resource_id or "")[:64] or None,
+                        "ip": ip_hash,
+                    },
+                )
+        except Exception:  # noqa: BLE001 — auditoria é best-effort
+            log.debug("access_audit.write_failed", path=path)

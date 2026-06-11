@@ -5,8 +5,8 @@ import dynamic from "next/dynamic";
 import { RadarBreadcrumb } from "@/features/radar/components/RadarBreadcrumb";
 
 // Lazy-load graph components — only compiled when user navigates here
-const EntityNetworkGraph = dynamic(
-  () => import("@/components/EntityNetworkGraph").then((m) => ({ default: m.EntityNetworkGraph })),
+const EntityEgoGraph = dynamic(
+  () => import("@/components/EntityEgoGraph").then((m) => ({ default: m.EntityEgoGraph })),
   { loading: () => <div className="h-96 animate-pulse bg-surface-subtle rounded-xl" />, ssr: false },
 );
 
@@ -33,7 +33,7 @@ export default function EntityNetworkPage() {
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted mb-3">
             Grafo de vizinhanca
           </p>
-          {entityId && <EntityNetworkGraph entityId={entityId} />}
+          {entityId && <EntityEgoGraph entityId={entityId} />}
         </div>
 
         {/* Path finder */}

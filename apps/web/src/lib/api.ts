@@ -159,6 +159,8 @@ export function getRadarV2Signals(params?: {
   period_to?: string;
   corruption_type?: string;
   sphere?: string;
+  uf?: string;
+  orgao_id?: string;
 }): Promise<PaginatedResponse<RadarV2SignalItem>> {
   const search = new URLSearchParams();
   if (params?.offset != null) search.set("offset", String(params.offset));
@@ -170,6 +172,8 @@ export function getRadarV2Signals(params?: {
   if (params?.period_to) search.set("period_to", params.period_to);
   if (params?.corruption_type) search.set("corruption_type", params.corruption_type);
   if (params?.sphere) search.set("sphere", params.sphere);
+  if (params?.uf) search.set("uf", params.uf);
+  if (params?.orgao_id) search.set("orgao_id", params.orgao_id);
   const qs = search.toString();
   return fetchJSON(`/public/radar/v2/signals${qs ? `?${qs}` : ""}`);
 }
@@ -276,8 +280,13 @@ export function getOrg(id: string): Promise<OrgSummary> {
 export function getGraphNeighborhood(
   entityId: string,
   depth: number = 1,
+  opts?: { offset?: number; limit?: number; edgeTypes?: string[] },
 ): Promise<NeighborhoodResponse> {
-  return fetchJSON(`/public/graph/neighborhood?entity_id=${entityId}&depth=${depth}`);
+  const params = new URLSearchParams({ entity_id: entityId, depth: String(depth) });
+  if (opts?.offset) params.set("offset", String(opts.offset));
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  if (opts?.edgeTypes?.length) params.set("edge_types", opts.edgeTypes.join(","));
+  return fetchJSON(`/public/graph/neighborhood?${params.toString()}`);
 }
 
 export function getCaseGraph(

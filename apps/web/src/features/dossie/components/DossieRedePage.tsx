@@ -1,27 +1,22 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Network, Building2, User, Landmark, Link2, AlertTriangle } from "lucide-react";
 import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import { useCaseGraphEnriched } from "@/hooks/useCaseGraphEnriched";
-import type { GNode } from "@/hooks/useCaseGraph";
+import { mapCaseGraphToSigma } from "@/components/graph/mapCaseGraph";
+import type { GraphNode } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const InvestigationCanvas = dynamic(
-  () =>
-    import("@/features/investigation/components/InvestigationCanvas").then((m) => ({
-      default: m.InvestigationCanvas,
-    })),
-  {
-    loading: () => (
-      <div className="h-[560px] animate-pulse rounded-xl bg-surface-subtle" />
-    ),
-    ssr: false,
-  },
-);
+const SigmaGraph = dynamic(() => import("@/components/graph/SigmaGraph"), {
+  loading: () => (
+    <div className="h-[560px] animate-pulse rounded-xl bg-surface-subtle" />
+  ),
+  ssr: false,
+});
 
 const SEV = {
   critical: {
@@ -99,31 +94,27 @@ export default function DossieRedePage() {
     undefined,
   );
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const fitViewRef = useRef<(() => void) | null>(null);
 
   const {
     graphData,
-    degreeMap,
-    entitySeverityMap,
-    nodeAttrsMap,
     signals,
     loading: graphLoading,
     error: graphError,
-    expandNode,
     erPending,
   } = useCaseGraphEnriched(caseId, focusSignalId);
 
-  const handleNodeClick = useCallback((node: GNode) => {
+  // Dados mapeados para o SigmaGraph
+  const sigmaData = useMemo(
+    () => mapCaseGraphToSigma(graphData.nodes, graphData.links),
+    [graphData],
+  );
+
+  // SigmaGraph captura o handler no mount — ref mantém a versão mais recente
+  const sigmaClickRef = useRef<(node: GraphNode) => void>(() => {});
+  sigmaClickRef.current = (node) => {
     setSelectedNodeId((prev) => (prev === node.id ? null : node.id));
-  }, []);
-
-  const handleClearSelected = useCallback(() => setSelectedNodeId(null), []);
-
-  const handleExpandSelected = useCallback(() => {
-    if (!selectedNodeId) return;
-    const node = graphData.nodes.find((n) => n.id === selectedNodeId);
-    if (node) expandNode(node.entity_id);
-  }, [selectedNodeId, graphData.nodes, expandNode]);
+  };
+  const handleSigmaNodeClick = useCallback((node: GraphNode) => sigmaClickRef.current(node), []);
 
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
@@ -283,27 +274,12 @@ export default function DossieRedePage() {
             </div>
           ) : (
             <div className="h-[560px] relative rounded-xl border border-border bg-surface-card overflow-hidden">
-              <InvestigationCanvas
-                graphData={graphData}
-                degreeMap={degreeMap}
-                entitySeverityMap={entitySeverityMap}
-                nodeAttrsMap={nodeAttrsMap}
-                selectedNodeId={selectedNodeId}
-                onNodeClick={handleNodeClick}
-                onBackgroundClick={handleClearSelected}
-                onClearSelected={handleClearSelected}
-                onExpandSelected={handleExpandSelected}
-                fitViewRef={fitViewRef}
+              <SigmaGraph
+                nodes={sigmaData.nodes}
+                edges={sigmaData.edges}
+                onNodeClick={handleSigmaNodeClick}
+                className="h-full w-full"
               />
-            </div>
-          )}
-
-          {/* Keyboard hints */}
-          {graphData.nodes.length > 0 && (
-            <div className="mt-2 flex items-center gap-4 font-mono text-[9px] text-muted">
-              <span><kbd className="rounded border border-border bg-surface-subtle px-1">Space</kbd> / <kbd className="rounded border border-border bg-surface-subtle px-1">F</kbd> Ajustar</span>
-              <span><kbd className="rounded border border-border bg-surface-subtle px-1">Esc</kbd> Desselecionar</span>
-              <span><kbd className="rounded border border-border bg-surface-subtle px-1">E</kbd> Expandir no selecionado</span>
             </div>
           )}
         </section>

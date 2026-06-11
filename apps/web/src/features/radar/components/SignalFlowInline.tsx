@@ -1,11 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { CheckCircle2, CircleDashed, Loader2, AlertTriangle } from "lucide-react";
 import { getSignalGraph } from "@/lib/api";
-import type { SignalGraphResponse, SignalSeverity } from "@/lib/types";
+import type { GraphNode, SignalGraphResponse } from "@/lib/types";
 import type { GNode, GLink } from "@/hooks/useCaseGraph";
-import { InvestigationCanvas } from "@/features/investigation/components/InvestigationCanvas";
+import { mapCaseGraphToSigma } from "@/components/graph/mapCaseGraph";
+import { NodeDetailDrawer } from "@/components/graph/NodeDetailDrawer";
+
+const SigmaGraph = dynamic(() => import("@/components/graph/SigmaGraph"), { ssr: false });
 
 // ── Graph data transform (mirrors graph/page.tsx) ─────────────────────────────
 function buildGraphData(data: SignalGraphResponse): { nodes: GNode[]; links: GLink[] } {
@@ -67,7 +71,7 @@ type StepState = "waiting" | "active" | "done";
 const STEPS = [
   { label: "Buscando sinal e relações", detail: "Conectando à base de dados" },
   { label: "Identificando entidades", detail: "Mapeando participantes e vínculos" },
-  { label: "Calculando layout da teia", detail: "Algoritmo de posicionamento ELK" },
+  { label: "Calculando layout da teia", detail: "Layout de forças (ForceAtlas2)" },
   { label: "Renderizando visualização", detail: "Grafo interativo pronto" },
 ] as const;
 
@@ -99,11 +103,9 @@ interface SignalFlowInlineProps {
 export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
   const [stepStates, setStepStates] = useState<StepState[]>(["active", "waiting", "waiting", "waiting"]);
   const [graphData, setGraphData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
-  const [entitySeverityMap, setEntitySeverityMap] = useState<Record<string, SignalSeverity>>({});
-  const [degreeMap, setDegreeMap] = useState<Record<string, number>>({});
-  const [nodeAttrsMap, setNodeAttrsMap] = useState<Record<string, Record<string, unknown>>>({});
   const [canvasVisible, setCanvasVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
   const setStep = useCallback((active: number) => {
     setStepStates((prev) =>
@@ -113,6 +115,15 @@ export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
         return "waiting";
       }),
     );
+  }, []);
+
+  const handleLayoutDone = useCallback(() => {
+    // Step 3: layout done → fade in canvas
+    setStepStates(["done", "done", "done", "active"]);
+    setTimeout(() => {
+      setStepStates(["done", "done", "done", "done"]);
+      setCanvasVisible(true);
+    }, 400);
   }, []);
 
   useEffect(() => {
@@ -129,29 +140,11 @@ export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
         await new Promise((r) => setTimeout(r, 350));
         if (cancelled) return;
 
-        const gd = buildGraphData(response);
+        setGraphData(buildGraphData(response));
 
-        // Build derived maps
-        const sev: Record<string, SignalSeverity> = {};
-        for (const node of response.overview.nodes) sev[node.entity_id] = response.signal.severity;
-        const deg: Record<string, number> = {};
-        for (const edge of gd.links) {
-          deg[edge.source] = (deg[edge.source] ?? 0) + 1;
-          deg[edge.target] = (deg[edge.target] ?? 0) + 1;
-        }
-        const attrs: Record<string, Record<string, unknown>> = {};
-        for (const entity of response.involved_entities ?? []) {
-          const node = response.overview.nodes.find((n) => n.entity_id === entity.entity_id);
-          if (node) attrs[node.id] = entity.identifiers ?? {};
-        }
-
-        setEntitySeverityMap(sev);
-        setDegreeMap(deg);
-        setNodeAttrsMap(attrs);
-        setGraphData(gd);
-
-        // Step 2: ELK layout starts (canvas mounts, hidden)
+        // Step 2: layout de forças roda em worker dentro do SigmaGraph
         setStep(2);
+        handleLayoutDone();
       } catch {
         if (!cancelled) setError("Não foi possível carregar a teia de conexões.");
       }
@@ -159,18 +152,13 @@ export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
 
     load();
     return () => { cancelled = true; };
-  }, [signalId, setStep]);
+  }, [signalId, setStep, handleLayoutDone]);
 
-  const handleLayoutDone = useCallback(() => {
-    // Step 3: layout done → fade in canvas
-    setStepStates(["done", "done", "done", "active"]);
-    setTimeout(() => {
-      setStepStates(["done", "done", "done", "done"]);
-      setCanvasVisible(true);
-    }, 400);
-  }, []);
-
-  const fitViewRef = useRef<(() => void) | null>(null);
+  // Dados mapeados para o SigmaGraph
+  const sigmaData = useMemo(
+    () => (graphData ? mapCaseGraphToSigma(graphData.nodes, graphData.links) : null),
+    [graphData],
+  );
 
   const isLoading = !canvasVisible && !error;
 
@@ -212,7 +200,7 @@ export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
       )}
 
       {/* Canvas — mounted as soon as graphData is ready (hidden until layout done) */}
-      {graphData && (
+      {sigmaData && (
         <div
           className="rounded-lg overflow-hidden transition-opacity duration-500"
           style={{
@@ -221,21 +209,16 @@ export function SignalFlowInline({ signalId }: SignalFlowInlineProps) {
             pointerEvents: canvasVisible ? "auto" : "none",
           }}
         >
-          <InvestigationCanvas
-            graphData={graphData}
-            degreeMap={degreeMap}
-            entitySeverityMap={entitySeverityMap}
-            nodeAttrsMap={nodeAttrsMap}
-            selectedNodeId={null}
-            onNodeClick={() => {}}
-            onBackgroundClick={() => {}}
-            onClearSelected={() => {}}
-            onExpandSelected={() => {}}
-            fitViewRef={fitViewRef}
-            onLayoutDone={handleLayoutDone}
+          <SigmaGraph
+            nodes={sigmaData.nodes}
+            edges={sigmaData.edges}
+            onNodeClick={setSelectedNode}
+            className="h-full w-full"
           />
         </div>
       )}
+
+      <NodeDetailDrawer node={selectedNode} onClose={() => setSelectedNode(null)} />
     </div>
   );
 }

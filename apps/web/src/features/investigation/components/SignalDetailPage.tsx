@@ -11,7 +11,7 @@ import {
   fetchRelatedSignals,
 } from "@/lib/api";
 import type { GNode, GLink } from "@/hooks/useCaseGraph";
-import { formatBRL, formatDate, relativeTime } from "@/lib/utils";
+import { displayIdentifierValue, formatBRL, formatDate, relativeTime } from "@/lib/utils";
 import type {
   SignalDetail,
   SignalEvidencePage,
@@ -1141,7 +1141,8 @@ function EntidadesTab({
                 {Object.keys(ent.identifiers).length > 0 && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     {Object.entries(ent.identifiers)
-                      .filter(([k]) => !["name_key", "cpf_hash"].includes(k))
+                      .map(([k, v]) => [k, displayIdentifierValue(k, v)] as const)
+                      .filter((kv): kv is readonly [string, string] => kv[1] !== null)
                       .slice(0, 3)
                       .map(([k, v]) => (
                         <span

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from api.app.middleware.cache import CacheMiddleware
+from api.app.middleware.pii_scrub import PIIScrubMiddleware
 from api.app.middleware.rate_limit import RateLimitMiddleware
 from api.app.middleware.security_events import SecurityEventsMiddleware
 from api.app.routers.internal import router as internal_router
@@ -39,6 +40,8 @@ app = FastAPI(
 
 _allowed_origins = [o.strip() for o in settings.ALLOWED_ORIGINS.split(",") if o.strip()]
 
+# Innermost: scrub PII before any caching/logging sees the response body
+app.add_middleware(PIIScrubMiddleware)
 app.add_middleware(SecurityEventsMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(CacheMiddleware)

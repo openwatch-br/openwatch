@@ -4,10 +4,10 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import type { EntityDetail, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { getEntity, getRadarV2SignalPreview } from "@/lib/api";
-import { formatBRL, formatDate, normalizeUnknownDisplay } from "@/lib/utils";
+import { displayIdentifierValue, formatBRL, formatDate, formatIdentifier, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
 import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
-import { EntityNetworkGraph } from "@/components/EntityNetworkGraph";
+import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import {
   Building2,
   Calendar,
@@ -541,7 +541,7 @@ function EntityContent({
 }) {
   const config = TYPE_CONFIG[entity.type] ?? TYPE_CONFIG.company;
   const Icon = config.icon;
-  const cnpj = entity.identifiers?.cnpj || entity.identifiers?.cpf;
+  const cnpj = entity.identifiers ? formatIdentifier(entity.identifiers) : "";
 
   return (
     <div className="space-y-3">
@@ -570,12 +570,16 @@ function EntityContent({
             Identificadores
           </p>
           <div className="space-y-1">
-            {Object.entries(entity.identifiers).map(([key, val]) => (
-              <div key={key} className="flex items-center justify-between text-xs">
-                <span className="text-muted uppercase font-mono text-[10px]">{key}</span>
-                <span className="text-primary font-mono text-[10px]">{val}</span>
-              </div>
-            ))}
+            {Object.entries(entity.identifiers).map(([key, val]) => {
+              const display = displayIdentifierValue(key, val);
+              if (display === null) return null;
+              return (
+                <div key={key} className="flex items-center justify-between text-xs">
+                  <span className="text-muted uppercase font-mono text-[10px]">{key}</span>
+                  <span className="text-primary font-mono text-[10px]">{display}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -604,7 +608,7 @@ function EntityContent({
           Rede de conexoes
         </p>
         <div className="h-[280px] rounded-lg overflow-hidden border border-border">
-          <EntityNetworkGraph entityId={entityId} />
+          <EntityEgoGraph entityId={entityId} height={280} />
         </div>
       </div>
 

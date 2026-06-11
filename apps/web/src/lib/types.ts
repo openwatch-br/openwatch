@@ -480,6 +480,9 @@ export interface NeighborhoodResponse {
     node_type: string;
     shared_events: number;
   }[];
+  // Paginação p/ expansão progressiva (ego-network)
+  total?: number;
+  offset?: number;
 }
 
 export interface SignalEvidenceItem {

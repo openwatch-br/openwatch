@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import type { TimelineEntityDTO, TimelineSignalDTO } from "@/lib/types";
-import { cn, formatBRL, formatDate } from "@/lib/utils";
+import { cn, formatBRL, formatCPF, formatDate } from "@/lib/utils";
 import { TYPOLOGY_LABELS } from "@/lib/constants";
 
 // ── Config ───────────────────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ function EntityMiniCard({ entity }: { entity: TimelineEntityDTO }) {
         </div>
       </div>
       {cnpj && <p className="font-mono text-[10px] text-muted">CNPJ {cnpj}</p>}
-      {cpf  && <p className="font-mono text-[10px] text-muted">CPF {cpf}</p>}
+      {cpf  && <p className="font-mono text-[10px] text-muted">CPF {formatCPF(cpf)}</p>}
     </div>
   );
 }

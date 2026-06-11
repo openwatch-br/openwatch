@@ -3,14 +3,18 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCaseGraph } from "@/hooks/useCaseGraph";
 import type { GNode } from "@/hooks/useCaseGraph";
-import { InvestigationCanvas } from "@/features/investigation/components/InvestigationCanvas";
+import { mapCaseGraphToSigma } from "@/components/graph/mapCaseGraph";
+import type { GraphNode } from "@/lib/types";
 import { InvestigationToolbar } from "@/features/investigation/components/InvestigationToolbar";
 import { InvestigationSidebar } from "@/features/investigation/components/InvestigationSidebar";
 import { AlertTriangle, Network, Building2, User, Info, ArrowLeft, X } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+
+const SigmaGraph = dynamic(() => import("@/components/graph/SigmaGraph"), { ssr: false });
 
 const ENTITY_TYPE_ICONS: Record<string, typeof Building2> = {
   company: Building2,
@@ -70,22 +74,6 @@ function LegendOverlay({ onClose }: { onClose: () => void }) {
           <span className="text-[var(--color-text-secondary)]">Vínculo Familiar</span>
         </div>
       </div>
-      <div className="my-3 h-px bg-[var(--color-border-light)]" />
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-text-secondary)]">Atalhos</p>
-      <div className="space-y-1 text-xs text-[var(--color-text-secondary)]">
-        <div className="flex items-center justify-between">
-          <kbd className="rounded bg-[var(--color-surface-hover)] px-1.5 py-0.5 font-mono text-xs">Espaço</kbd>
-          <span>Ajustar vista</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <kbd className="rounded bg-[var(--color-surface-hover)] px-1.5 py-0.5 font-mono text-xs">E</kbd>
-          <span>Expandir node</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <kbd className="rounded bg-[var(--color-surface-hover)] px-1.5 py-0.5 font-mono text-xs">Esc</kbd>
-          <span>Limpar seleção</span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -100,7 +88,6 @@ export default function InvestigationPage() {
   const {
     raw,
     graphData,
-    degreeMap,
     entitySeverityMap,
     signals,
     seedEntityIds,
@@ -126,17 +113,23 @@ export default function InvestigationPage() {
     [expandNode],
   );
 
-  const handleBackgroundClick = useCallback(() => {
-    setSelectedNode(null);
-  }, []);
-
   const handleClearSelected = useCallback(() => {
     setSelectedNode(null);
   }, []);
 
-  const handleExpandSelected = useCallback(() => {
-    if (selectedNode) expandNode(selectedNode.entity_id);
-  }, [selectedNode, expandNode]);
+  // Dados mapeados para o SigmaGraph
+  const sigmaData = useMemo(
+    () => mapCaseGraphToSigma(graphData.nodes, graphData.links),
+    [graphData],
+  );
+
+  // SigmaGraph captura o handler no mount — ref mantém a versão mais recente
+  const sigmaClickRef = useRef<(node: GraphNode) => void>(() => {});
+  sigmaClickRef.current = (node) => {
+    const gNode = graphData.nodes.find((n) => n.id === node.id);
+    if (gNode) handleNodeClick(gNode);
+  };
+  const handleSigmaNodeClick = useCallback((node: GraphNode) => sigmaClickRef.current(node), []);
 
   // Build attrs lookup: node.id -> attrs
   const nodeAttrsMap = useMemo(() => {
@@ -414,17 +407,11 @@ export default function InvestigationPage() {
           {/* Legend overlay */}
           {legendOpen && <LegendOverlay onClose={() => setLegendOpen(false)} />}
 
-          <InvestigationCanvas
-            graphData={graphData}
-            degreeMap={degreeMap}
-            entitySeverityMap={entitySeverityMap}
-            nodeAttrsMap={nodeAttrsMap}
-            selectedNodeId={selectedNode?.id ?? null}
-            onNodeClick={handleNodeClick}
-            onBackgroundClick={handleBackgroundClick}
-            onClearSelected={handleClearSelected}
-            onExpandSelected={handleExpandSelected}
-            fitViewRef={fitViewRef}
+          <SigmaGraph
+            nodes={sigmaData.nodes}
+            edges={sigmaData.edges}
+            onNodeClick={handleSigmaNodeClick}
+            className="h-full w-full"
           />
         </div>
 

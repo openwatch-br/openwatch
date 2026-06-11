@@ -258,6 +258,8 @@ async def radar_v2_signals(
     period_to: datetime | None = Query(None, description="Filter: analysis period ends on or before this date"),
     corruption_type: str | None = Query(None, description="Filter by corruption type"),
     sphere: str | None = Query(None, description="Filter by sphere"),
+    uf: str | None = Query(None, min_length=2, max_length=2, description="Filter: signals involving entities in this UF"),
+    orgao_id: uuid.UUID | None = Query(None, description="Filter: signals involving this entity (órgão)"),
 ):
     items, total = await get_radar_v2_signals(
         session,
@@ -270,6 +272,8 @@ async def radar_v2_signals(
         period_to=period_to,
         corruption_type=corruption_type,
         sphere=sphere,
+        uf=uf,
+        orgao_id=str(orgao_id) if orgao_id else None,
     )
     return {
         "items": items,
@@ -555,9 +559,19 @@ async def graph_neighborhood(
     session: DbSession,
     entity_id: uuid.UUID = Query(..., description="Center entity ID"),
     depth: int = Query(1, ge=1, le=2, description="Traversal depth (1-2)"),
+    offset: int = Query(0, ge=0, description="Pagination offset over neighbors"),
+    limit: int = Query(50, ge=1, le=100, description="Page size (max 100 nodes)"),
+    edge_types: str | None = Query(None, description="Comma-separated edge types to include"),
 ):
-    """Graph neighborhood — nodes and edges around an entity (max 100 nodes)."""
-    return await adapter_get_graph_neighborhood(session, entity_id, depth=depth, limit=100)
+    """Graph neighborhood — ego-network paginada p/ expansão progressiva."""
+    return await adapter_get_graph_neighborhood(
+        session,
+        entity_id=entity_id,
+        depth=depth,
+        limit=limit,
+        offset=offset,
+        edge_types=edge_types,
+    )
 
 
 @router.get("/graph/path", response_model=EntityPathResponse)

@@ -62,7 +62,22 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
 
   const { data: raw } = useSuspenseQuery<CaseGraphResponse>({
     queryKey: ["case-graph", caseId, depth, focusSignalId ?? null],
-    queryFn: () => getCaseGraph(caseId, depth, { focus_signal_id: focusSignalId }),
+    // "placeholder" é o param sintético do generateStaticParams — buscar
+    // durante o prerender derruba o build (422 da API). Grafo vazio.
+    queryFn: () =>
+      caseId === "placeholder"
+        ? Promise.resolve<CaseGraphResponse>({
+            case_id: caseId,
+            case_title: "",
+            case_severity: "low",
+            case_status: "open",
+            seed_entity_ids: [],
+            nodes: [],
+            edges: [],
+            signals: [],
+            truncated: false,
+          })
+        : getCaseGraph(caseId, depth, { focus_signal_id: focusSignalId }),
   });
 
   const allNodes = useMemo(() => {

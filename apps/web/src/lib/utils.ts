@@ -81,10 +81,19 @@ export function relativeTime(dateStr: string): string {
   }
 }
 
+// LGPD (Art. 6º, minimização): CPF nunca é exibido completo. Replica a máscara
+// da Receita Federal (***XXXXXX**), mantendo apenas os 6 dígitos do meio.
 export function formatCPF(cpf: string): string {
   const d = cpf.replace(/\D/g, "");
-  if (d.length !== 11) return cpf;
-  return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
+  if (d.length !== 11) return maskPartialCPF(cpf);
+  return `***.${d.slice(3, 6)}.${d.slice(6, 9)}-**`;
+}
+
+// Normaliza um cpf_partial já mascarado (***XXXXXX**) para exibição pontuada.
+export function maskPartialCPF(partial: string): string {
+  const d = partial.replace(/\D/g, "");
+  if (d.length === 6) return `***.${d.slice(0, 3)}.${d.slice(3)}-**`;
+  return partial;
 }
 
 export function formatCNPJ(cnpj: string): string {
@@ -93,10 +102,19 @@ export function formatCNPJ(cnpj: string): string {
   return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
 }
 
+// Valor de identificador seguro p/ exibição (LGPD): CPF sempre mascarado,
+// hashes/chaves internas omitidos (retorna null → não renderizar).
+export function displayIdentifierValue(key: string, value: string): string | null {
+  if (key === "cpf") return formatCPF(value);
+  if (key === "cpf_partial") return maskPartialCPF(value);
+  if (key === "cpf_hash" || key === "name_key") return null;
+  return value;
+}
+
 export function formatIdentifier(identifiers: Record<string, string>): string {
   if (identifiers.cnpj) return formatCNPJ(identifiers.cnpj);
   if (identifiers.cpf) return formatCPF(identifiers.cpf);
-  if (identifiers.cpf_partial) return identifiers.cpf_partial;
+  if (identifiers.cpf_partial) return maskPartialCPF(identifiers.cpf_partial);
   return "";
 }
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getOrg } from "@/lib/api";
-import { GraphView } from "@/components/GraphView";
+import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import { DetailSkeleton } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { formatBRL } from "@/lib/utils";
@@ -413,7 +413,7 @@ export default function OrgDetailPage() {
                   className="overflow-hidden"
                   style={{ border: "1px solid var(--color-border)" }}
                 >
-                  <GraphView entityId={org.id} />
+                  <EntityEgoGraph entityId={org.id} height={480} />
                 </div>
               </div>
             </div>

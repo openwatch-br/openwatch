@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Building2, User, Landmark } from "lucide-react";
 import type { EntitySearchResult } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, formatIdentifier } from "@/lib/utils";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 
 const TYPE_CONFIG: Record<string, { label: string; icon: typeof Building2; color: string }> = {
@@ -19,7 +19,7 @@ interface EntityResultCardProps {
 export function EntityResultCard({ entity }: EntityResultCardProps) {
   const config = TYPE_CONFIG[entity.type] ?? TYPE_CONFIG.company;
   const Icon = config.icon;
-  const cnpj = entity.identifiers?.cnpj || entity.identifiers?.cpf;
+  const cnpj = entity.identifiers ? formatIdentifier(entity.identifiers) : "";
 
   return (
     <Link

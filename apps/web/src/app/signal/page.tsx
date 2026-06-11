@@ -1,9 +1,13 @@
-import { redirect } from "next/navigation";
+import ClientPage from "@/features/signal/components/SignalIndexPage";
 
 /**
- * Signal domain index — redirects to Radar until the Signal feed is built.
- * The sidebar already renders Signal-specific nav for /signal/* routes.
+ * Índice de sinais — lista paginada com filtros (tipologia, severidade,
+ * UF, período). Passo 1 do fluxo sinal → detalhe → grafo → drawer.
  */
-export default function SignalIndexPage() {
-  redirect("/radar");
+export default function Page() {
+  return (
+    <div className="ow-mode-working ow-content">
+      <ClientPage />
+    </div>
+  );
 }
