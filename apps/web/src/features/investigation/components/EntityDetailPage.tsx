@@ -7,24 +7,22 @@ import {
   Building2,
   User,
   Landmark,
-  AlertTriangle,
   Users,
   Radar,
   Activity,
   ChevronRight,
   Shield,
   FileText,
-  Network,
 } from "lucide-react";
-import { getEntity, getGraphNeighborhood } from "@/lib/api";
-import { EntityNetworkGraph } from "@/components/EntityNetworkGraph";
+import { getEntity, getGraphNeighborhood, getRadarV2Signals } from "@/lib/api";
+import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import { EmptyState } from "@/components/EmptyState";
 import { DetailSkeleton } from "@/components/Skeleton";
 import { normalizeUnknownDisplay } from "@/lib/utils";
-import type { SignalSeverity, EntityDetail, NeighborhoodResponse } from "@/lib/types";
+import type { SignalSeverity, EntityDetail, NeighborhoodResponse, RadarV2SignalItem } from "@/lib/types";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { EntityTypeBadge } from "@/components/Badge";
-import { Button, LinkButton } from "@/components/Button";
+import { LinkButton } from "@/components/Button";
 import { clsx } from "clsx";
 
 const TYPE_ICONS = {
@@ -35,15 +33,6 @@ const TYPE_ICONS = {
   orgao: Landmark,
   org: Landmark,
 } as const;
-
-const TYPE_LABELS: Record<string, string> = {
-  pessoa_fisica: "Pessoa Física",
-  person: "Pessoa",
-  pessoa_juridica: "Empresa",
-  company: "Empresa",
-  orgao: "Órgão",
-  org: "Órgão",
-};
 
 const SEVERITY_ORDER: SignalSeverity[] = ["critical", "high", "medium", "low"];
 
@@ -88,6 +77,7 @@ export default function EntityDetailPage() {
 
   const [entity, setEntity] = useState<EntityDetail | null>(null);
   const [neighborhood, setNeighborhood] = useState<NeighborhoodResponse | null>(null);
+  const [signals, setSignals] = useState<RadarV2SignalItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("sinais");
 
@@ -100,17 +90,18 @@ export default function EntityDetailPage() {
         const e = await getEntity(id);
         if (cancelled) return;
         setEntity(e);
+        // Load signals and neighborhood in parallel once entity is known
+        const [sigs, nbh] = await Promise.allSettled([
+          getRadarV2Signals({ orgao_id: e.id, limit: 20 }),
+          getGraphNeighborhood(id),
+        ]);
+        if (cancelled) return;
+        if (sigs.status === "fulfilled") setSignals(sigs.value.items);
+        if (nbh.status === "fulfilled") setNeighborhood(nbh.value);
       } catch (err) {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : "Unknown error";
         setError(msg.includes("404") ? "not_found" : msg);
-        return;
-      }
-      try {
-        const n = await getGraphNeighborhood(id);
-        if (!cancelled) setNeighborhood(n);
-      } catch {
-        // neighborhood is optional
       }
     }
 
@@ -146,8 +137,19 @@ export default function EntityDetailPage() {
   }
 
   const TypeIcon = TYPE_ICONS[entity.type as keyof typeof TYPE_ICONS] ?? Building2;
-  const identifierEntries = Object.entries(entity.identifiers);
+  // Sanitize identifiers: skip null/empty/internal-only keys
+  const identifierEntries = Object.entries(entity.identifiers).filter(
+    ([, v]) => v != null && v !== "" && v !== "unknown",
+  );
   const coParticipants = neighborhood?.co_participants ?? [];
+  // Precompute per-severity counts from loaded signals
+  const signalCountBySeverity = SEVERITY_ORDER.reduce<Record<SignalSeverity, number>>(
+    (acc, sev) => {
+      acc[sev] = (signals ?? []).filter((s) => s.severity === sev).length;
+      return acc;
+    },
+    { critical: 0, high: 0, medium: 0, low: 0 },
+  );
   const eventCount = neighborhood?.diagnostics?.entity_event_count ?? 0;
   const normalizedType = normalizeEntityType(entity.type);
   const sector = entity.attrs?.sector as string | undefined;
@@ -162,13 +164,6 @@ export default function EntityDetailPage() {
           className="text-mono-xs transition-colors hover:text-[var(--color-amber-text)]"
         >
           Radar
-        </Link>
-        <ChevronRight className="h-3 w-3 opacity-40" />
-        <Link
-          href="/entidades"
-          className="text-mono-xs transition-colors hover:text-[var(--color-amber-text)]"
-        >
-          Entidades
         </Link>
         <ChevronRight className="h-3 w-3 opacity-40" />
         <span className="text-mono-xs max-w-xs truncate" style={{ color: "var(--color-text-2)" }}>
@@ -245,32 +240,35 @@ export default function EntityDetailPage() {
           className="grid grid-cols-2 gap-px sm:grid-cols-4"
           style={{ background: "var(--color-border)" }}
         >
-          {SEVERITY_ORDER.map((sev) => (
-            <div
-              key={sev}
-              className="flex flex-col gap-1.5 px-5 py-4"
-              style={{ background: "var(--color-surface)" }}
-            >
-              <span
-                className="text-mono-xs uppercase tracking-widest"
-                style={{ color: `var(--color-${sev}-text)` }}
+          {SEVERITY_ORDER.map((sev) => {
+            const count = signalCountBySeverity[sev];
+            return (
+              <div
+                key={sev}
+                className="flex flex-col gap-1.5 px-5 py-4"
+                style={{ background: "var(--color-surface)" }}
               >
-                {SEVERITY_LABELS[sev]}
-              </span>
-              <span
-                className="text-display-md tabular-nums leading-none"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  color: `var(--color-${sev})`,
-                }}
-              >
-                —
-              </span>
-              <span className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
-                ver Radar
-              </span>
-            </div>
-          ))}
+                <span
+                  className="text-mono-xs uppercase tracking-widest"
+                  style={{ color: `var(--color-${sev}-text)` }}
+                >
+                  {SEVERITY_LABELS[sev]}
+                </span>
+                <span
+                  className="text-display-md tabular-nums leading-none"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    color: signals === null ? "var(--color-text-3)" : `var(--color-${sev})`,
+                  }}
+                >
+                  {signals === null ? "…" : count}
+                </span>
+                <span className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
+                  {signals === null ? "carregando" : count === 1 ? "sinal" : "sinais"}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Stats footer strip */}
@@ -352,49 +350,92 @@ export default function EntityDetailPage() {
           {/* ── Sinais ── */}
           {activeTab === "sinais" && (
             <div className="space-y-4">
-              <div className="ow-alert ow-alert-warning flex items-start gap-3">
-                <Activity
-                  className="mt-0.5 h-4 w-4 shrink-0"
-                  style={{ color: "var(--color-amber)" }}
-                />
-                <div>
-                  <p
-                    className="text-mono-sm font-semibold"
-                    style={{ color: "var(--color-amber-text)" }}
-                  >
-                    Sinais disponíveis no Radar
-                  </p>
-                  <p className="mt-0.5 text-mono-xs" style={{ color: "var(--color-text-2)" }}>
-                    A contagem detalhada por severidade está disponível na visão Radar
-                    desta entidade.
-                  </p>
+              {signals === null && (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-14 animate-pulse rounded"
+                      style={{ background: "var(--color-surface-2)" }}
+                    />
+                  ))}
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {SEVERITY_ORDER.map((sev) => (
-                  <div
-                    key={sev}
-                    className={`ow-signal-card ow-signal-card-${sev} flex flex-col gap-2 px-4 py-3`}
-                  >
-                    <span className="text-mono-xs uppercase tracking-widest">
-                      {SEVERITY_LABELS[sev]}
-                    </span>
-                    <span
-                      className="text-display-md leading-none"
-                      style={{ fontFamily: "var(--font-mono)" }}
-                    >
-                      —
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {signals !== null && signals.length === 0 && (
+                <EmptyState
+                  icon={Activity}
+                  title="Nenhum sinal detectado"
+                  description="Esta entidade não possui sinais de risco identificados nos dados analisados."
+                />
+              )}
+
+              {signals !== null && signals.length > 0 && (
+                <div className="ow-table-wrapper">
+                  <table className="ow-table">
+                    <thead>
+                      <tr>
+                        <th>Tipologia</th>
+                        <th>Severidade</th>
+                        <th>Período</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {signals.map((sig) => (
+                        <tr key={sig.id} className="ow-card-hover">
+                          <td>
+                            <div>
+                              <p
+                                className="font-medium"
+                                style={{ color: "var(--color-text)" }}
+                              >
+                                {sig.typology_name}
+                              </p>
+                              <p
+                                className="text-mono-xs"
+                                style={{ color: "var(--color-text-3)" }}
+                              >
+                                {sig.typology_code}
+                              </p>
+                            </div>
+                          </td>
+                          <td>
+                            <span
+                              className={`ow-badge ow-badge-${sig.severity}`}
+                            >
+                              {SEVERITY_LABELS[sig.severity]}
+                            </span>
+                          </td>
+                          <td
+                            className="text-mono-xs"
+                            style={{ color: "var(--color-text-3)" }}
+                          >
+                            {sig.period_start
+                              ? new Date(sig.period_start).toLocaleDateString("pt-BR")
+                              : "—"}
+                          </td>
+                          <td className="text-right">
+                            <Link
+                              href={`/signal/${sig.id}`}
+                              className="text-mono-xs transition-colors hover:text-[var(--color-amber-text)]"
+                              style={{ color: "var(--color-text-3)" }}
+                            >
+                              Detalhes →
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               <div>
                 <LinkButton href={`/radar?entity=${entity.id}`} variant="ghost" size="sm">
-                    <Radar className="mr-1.5 h-3.5 w-3.5" />
-                    Acessar Radar desta Entidade
-                  </LinkButton>
+                  <Radar className="mr-1.5 h-3.5 w-3.5" />
+                  Acessar Radar desta Entidade
+                </LinkButton>
               </div>
             </div>
           )}
@@ -422,7 +463,7 @@ export default function EntityDetailPage() {
                   className="overflow-hidden"
                   style={{ border: "1px solid var(--color-border)" }}
                 >
-                  <EntityNetworkGraph entityId={entity.id} className="" />
+                  <EntityEgoGraph entityId={entity.id} />
                 </div>
               </div>
 
