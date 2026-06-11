@@ -1245,6 +1245,10 @@ body {
 @keyframes scaleIn   { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 
+/* Pipeline stage animations (used by coverage page via Tailwind arbitrary syntax) */
+@keyframes slide    { 0% { transform: translateX(-150%); } 100% { transform: translateX(150%); } }
+@keyframes progress { 0% { transform: translateX(-200%); } 60% { transform: translateX(100%); } 100% { transform: translateX(300%); } }
+
 @layer utilities {
   .animate-fade-in   { animation: ow-fade-in   200ms ease-out both; }
   .animate-slide-up  { animation: ow-slide-up  250ms cubic-bezier(0.16,1,0.3,1) both; }

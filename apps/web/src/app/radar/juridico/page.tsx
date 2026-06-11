@@ -1,35 +1,25 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import { getRadarV2Summary } from "@/lib/api";
 import type { RadarV2SummaryResponse } from "@/lib/types";
-import { RadarBreadcrumb } from "@/components/radar/RadarBreadcrumb";
-import { LegalSection } from "@/components/investigation-v2/LegalSection";
-import { TableSkeleton } from "@/components/Skeleton";
+import { RadarBreadcrumb } from "@/features/radar/components/RadarBreadcrumb";
+import { LegalSection } from "@/features/investigation/components/v2/LegalSection";
 
-export default function JuridicoPage() {
-  const [summary, setSummary] = useState<RadarV2SummaryResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getRadarV2Summary()
-      .then(setSummary)
-      .catch(() => setSummary(null))
-      .finally(() => setLoading(false));
-  }, []);
+export default async function JuridicoPage() {
+  let summary: RadarV2SummaryResponse | null = null;
+  try {
+    summary = await getRadarV2Summary();
+  } catch {
+    // render with empty data on error
+  }
 
   return (
-    <div className="ow-mode-working mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6">
+    <div className="ow-mode-editorial ow-content">
       <RadarBreadcrumb crumbs={[
         { label: "Radar", href: "/radar" },
         { label: "Juridico" },
       ]} />
 
       <div className="mt-6">
-        {loading && <TableSkeleton rows={6} />}
-        {!loading && (
-          <LegalSection typologyCounts={summary?.typology_counts ?? []} />
-        )}
+        <LegalSection typologyCounts={summary?.typology_counts ?? []} />
       </div>
     </div>
   );

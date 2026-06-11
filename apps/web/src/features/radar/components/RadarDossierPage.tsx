@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -9,9 +10,9 @@ import type {
   DossierTimelineResponse,
   DossierSummaryResponse,
 } from "@/lib/types";
-import { DossieBookContext } from "@/components/dossie/DossieBookContext";
-import DossieJuridicoPage from "@/components/pages/DossieJuridicoPage";
-import DossieRedePage from "@/components/pages/DossieRedePage";
+import { DossieBookContext } from "@/features/dossie/components/DossieBookContext";
+import DossieJuridicoPage from "@/features/dossie/components/DossieJuridicoPage";
+import DossieRedePage from "@/features/dossie/components/DossieRedePage";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -1464,7 +1465,15 @@ export default function RadarDossierPage() {
         {(tab === "juridico" || tab === "rede") && (
           <DossieBookContext.Provider value={bookContextValue}>
             {tab === "juridico" && <DossieJuridicoPage />}
-            {tab === "rede" && <DossieRedePage />}
+            {tab === "rede" && (
+              <Suspense fallback={
+                <div className="flex h-64 items-center justify-center text-sm text-muted">
+                  Carregando grafo...
+                </div>
+              }>
+                <DossieRedePage />
+              </Suspense>
+            )}
           </DossieBookContext.Provider>
         )}
       </div>

@@ -7,7 +7,7 @@ import { getSignalGraph } from "@/lib/api";
 import type { SignalGraphResponse, SignalInvolvedEntityProfile } from "@/lib/types";
 import type { GNode, GLink } from "@/hooks/useCaseGraph";
 import { CONNECTOR_COLORS, CONNECTOR_LABELS } from "@/lib/constants";
-import { InvestigationCanvas } from "@/components/investigation/InvestigationCanvas";
+import { InvestigationCanvas } from "@/features/investigation/components/InvestigationCanvas";
 import { PageHeader } from "@/components/PageHeader";
 import { DetailSkeleton } from "@/components/Skeleton";
 import { EmptyState } from "@/components/EmptyState";

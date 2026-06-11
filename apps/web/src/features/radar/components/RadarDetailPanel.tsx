@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import type { RadarV2CasePreviewResponse, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { formatBRL, formatDate, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
-import { SignalFlowInline } from "@/components/radar/SignalFlowInline";
+import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
 import {
   Calendar,
   ChevronLeft,

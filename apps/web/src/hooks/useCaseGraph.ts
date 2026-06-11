@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { getCaseGraph, getGraphNeighborhood } from "@/lib/api";
 import type {
   CaseGraphResponse,
@@ -55,29 +56,16 @@ export interface CaseGraphData {
 }
 
 export function useCaseGraph(caseId: string, focusSignalId?: string, depth: number = 1) {
-  const [raw, setRaw] = useState<CaseGraphResponse | null>(null);
   const [extraNodes, setExtraNodes] = useState<GraphNode[]>([]);
   const [extraEdges, setExtraEdges] = useState<GraphEdge[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [expanding, setExpanding] = useState(false);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    getCaseGraph(caseId, depth, { focus_signal_id: focusSignalId })
-      .then((data) => {
-        setRaw(data);
-        setExtraNodes([]);
-        setExtraEdges([]);
-      })
-      .catch(() => setError("Erro ao carregar grafo do caso"))
-      .finally(() => setLoading(false));
-  }, [caseId, focusSignalId, depth]);
+  const { data: raw } = useSuspenseQuery<CaseGraphResponse>({
+    queryKey: ["case-graph", caseId, depth, focusSignalId ?? null],
+    queryFn: () => getCaseGraph(caseId, depth, { focus_signal_id: focusSignalId }),
+  });
 
   const allNodes = useMemo(() => {
-    if (!raw) return [];
     const merged = [...raw.nodes];
     const ids = new Set(merged.map((n) => n.id));
     for (const n of extraNodes) {
@@ -90,7 +78,6 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
   }, [raw, extraNodes]);
 
   const allEdges = useMemo(() => {
-    if (!raw) return [];
     const merged = [...raw.edges];
     const ids = new Set(merged.map((e) => e.id));
     for (const e of extraEdges) {
@@ -102,18 +89,9 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
     return merged;
   }, [raw, extraEdges]);
 
-  const seedEntityIds = useMemo(
-    () => new Set(raw?.seed_entity_ids ?? []),
-    [raw],
-  );
-  const focusEntityIds = useMemo(
-    () => new Set(raw?.focus_entity_ids ?? []),
-    [raw],
-  );
-  const focusEdgeIds = useMemo(
-    () => new Set(raw?.focus_edge_ids ?? []),
-    [raw],
-  );
+  const seedEntityIds = useMemo(() => new Set(raw.seed_entity_ids ?? []), [raw]);
+  const focusEntityIds = useMemo(() => new Set(raw.focus_entity_ids ?? []), [raw]);
+  const focusEdgeIds = useMemo(() => new Set(raw.focus_edge_ids ?? []), [raw]);
 
   const graphData: CaseGraphData = useMemo(() => {
     const nodes: GNode[] = allNodes.map((n) => ({
@@ -155,7 +133,6 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
   }, [graphData.links]);
 
   const entitySeverityMap: Record<string, SignalSeverity> = useMemo(() => {
-    if (!raw) return {};
     const order: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
     const map: Record<string, SignalSeverity> = {};
     for (const sig of raw.signals) {
@@ -190,14 +167,14 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
     graphData,
     degreeMap,
     entitySeverityMap,
-    signals: Array.from(new Map((raw?.signals ?? []).map((s) => [s.id, s])).values()) as CaseSignalBrief[],
+    signals: Array.from(new Map((raw.signals ?? []).map((s) => [s.id, s])).values()) as CaseSignalBrief[],
     seedEntityIds,
-    loading,
-    error,
+    loading: false,
+    error: null,
     expanding,
     expandNode,
-    erPending: raw?.er_pending ?? false,
-    focusSignalSummary: raw?.focus_signal_summary ?? null,
+    erPending: raw.er_pending ?? false,
+    focusSignalSummary: raw.focus_signal_summary ?? null,
     focusEntityIds,
     focusEdgeIds,
   };

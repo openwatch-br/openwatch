@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getSignalEvidence } from "@/lib/api";
 import { EvidenceList } from "@/components/EvidenceList";
-import type { EvidenceRef, EvidenceStats, SignalEvidencePage } from "@/lib/types";
+import type { EvidenceRef, EvidenceStats } from "@/lib/types";
 
 const EVIDENCE_PAGE_SIZE = 20;
 
@@ -19,45 +20,28 @@ export function SignalEvidenceSection({
   evidenceStats,
 }: SignalEvidenceSectionProps) {
   const [offset, setOffset] = useState(0);
-  const [page, setPage] = useState<SignalEvidencePage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getSignalEvidence(signalId, {
-      offset,
-      limit: EVIDENCE_PAGE_SIZE,
-      sort: "occurred_at_desc",
-    })
-      .then(setPage)
-      .catch(() => setError("Erro ao carregar evidências"))
-      .finally(() => setLoading(false));
-  }, [signalId, offset]);
+  const { data: page, isLoading, isError } = useQuery({
+    queryKey: ["signal-evidence", signalId, offset],
+    queryFn: () => getSignalEvidence(signalId, { offset, limit: EVIDENCE_PAGE_SIZE, sort: "occurred_at_desc" }),
+    placeholderData: keepPreviousData,
+  });
 
-  const total =
-    page?.total ??
-    evidenceStats?.total_events ??
-    evidenceRefs.length;
+  const total = page?.total ?? evidenceStats?.total_events ?? evidenceRefs.length;
 
-  const items = page?.items ?? [];
-
-  if (error) {
-    return (
-      <p className="mt-6 text-sm text-error">{error}</p>
-    );
+  if (isError) {
+    return <p className="mt-6 text-sm text-error">Erro ao carregar evidências</p>;
   }
 
   return (
     <EvidenceList
       signalId={signalId}
-      items={items}
+      items={page?.items ?? []}
       total={total}
       offset={offset}
       limit={EVIDENCE_PAGE_SIZE}
       onPageChange={setOffset}
-      loading={loading}
+      loading={isLoading}
       refs={evidenceRefs}
     />
   );

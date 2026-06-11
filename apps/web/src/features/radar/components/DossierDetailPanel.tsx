@@ -6,7 +6,7 @@ import type { EntityDetail, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { getEntity, getRadarV2SignalPreview } from "@/lib/api";
 import { formatBRL, formatDate, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
-import { SignalFlowInline } from "@/components/radar/SignalFlowInline";
+import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
 import { EntityNetworkGraph } from "@/components/EntityNetworkGraph";
 import {
   Building2,

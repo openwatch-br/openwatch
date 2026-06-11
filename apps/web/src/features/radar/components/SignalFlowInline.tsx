@@ -5,7 +5,7 @@ import { CheckCircle2, CircleDashed, Loader2, AlertTriangle } from "lucide-react
 import { getSignalGraph } from "@/lib/api";
 import type { SignalGraphResponse, SignalSeverity } from "@/lib/types";
 import type { GNode, GLink } from "@/hooks/useCaseGraph";
-import { InvestigationCanvas } from "@/components/investigation/InvestigationCanvas";
+import { InvestigationCanvas } from "@/features/investigation/components/InvestigationCanvas";
 
 // ── Graph data transform (mirrors graph/page.tsx) ─────────────────────────────
 function buildGraphData(data: SignalGraphResponse): { nodes: GNode[]; links: GLink[] } {

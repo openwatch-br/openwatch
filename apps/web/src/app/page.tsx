@@ -1,6 +1,6 @@
 // apps/web/src/app/page.tsx
 import Link from "next/link";
-import { Section } from "@/components/watchdog";
+import { Section } from "@/features/watchdog/components";
 import { StatHero } from "@/components/StatHero";
 import { TYPOLOGY_LABELS, DATA_SOURCES } from "@/lib/constants";
 
@@ -13,7 +13,7 @@ export default function HomePage() {
   const sourceCount = DATA_SOURCES.length;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-14">
+    <div className="ow-mode-editorial ow-content space-y-14">
 
       {/* ── Hero ─────────────────────────────────────────────────────── */}
       <header className="space-y-6">

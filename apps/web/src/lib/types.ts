@@ -1077,3 +1077,26 @@ export interface DossierSummaryResponse {
   legal_hypotheses: DossierLegalHypothesis[];
   related_cases: DossierRelatedCase[];
 }
+
+export type ContestationReportType =
+  | "signal_error"
+  | "entity_error"
+  | "duplicate"
+  | "other";
+
+export interface ContestationPayload {
+  signal_id: string;
+  report_type: ContestationReportType;
+  requester_name: string;
+  reason: string;
+  requester_email?: string;
+  evidence_url?: string;
+}
+
+export interface ContestationResponse {
+  id: string;
+  signal_id: string;
+  report_type: ContestationReportType;
+  status: string;
+  created_at: string;
+}

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ClientPage from "@/components/pages/SignalFlowPage";
+import ClientPage from "@/features/investigation/components/SignalFlowPage";
 
 export function generateStaticParams() {
   return [{ id: "placeholder" }];

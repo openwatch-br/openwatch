@@ -5,14 +5,14 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { Network, Building2, User, Landmark, Link2, AlertTriangle } from "lucide-react";
-import { useDossieBook } from "@/components/dossie/DossieBookContext";
+import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import { useCaseGraphEnriched } from "@/hooks/useCaseGraphEnriched";
 import type { GNode } from "@/hooks/useCaseGraph";
 import { cn } from "@/lib/utils";
 
 const InvestigationCanvas = dynamic(
   () =>
-    import("@/components/investigation/InvestigationCanvas").then((m) => ({
+    import("@/features/investigation/components/InvestigationCanvas").then((m) => ({
       default: m.InvestigationCanvas,
     })),
   {

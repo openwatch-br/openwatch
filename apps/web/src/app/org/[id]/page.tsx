@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ClientPage from "@/components/pages/OrgDetailPage";
+import ClientPage from "@/features/investigation/components/OrgDetailPage";
 
 export function generateStaticParams() {
   return [{ id: "placeholder" }];
@@ -7,7 +7,7 @@ export function generateStaticParams() {
 
 export default function Page(_: { params: Promise<Record<string, string>> }) {
   return (
-    <div className="ow-mode-working">
+    <div className="ow-mode-editorial ow-content">
       <Suspense><ClientPage /></Suspense>
     </div>
   );

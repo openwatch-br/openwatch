@@ -170,7 +170,7 @@ export default function ApiHealthPage() {
   const ToneIcon = toneConfig.Icon;
 
   return (
-    <div className="ow-mode-working ow-content">
+    <div className="ow-mode-editorial ow-content">
       {/* ── Page Header ─────────────────────────────────────────── */}
       <PageHeader
         eyebrow="SISTEMA"

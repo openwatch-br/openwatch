@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn, formatBRL, formatDate } from "@/lib/utils";
+import { getSignalEvidenceExportBlob } from "@/lib/api";
 import type { EvidenceRef, SignalEvidenceItem } from "@/lib/types";
 
 // ---- Ref-based list (provenance chain) ----
@@ -152,6 +153,34 @@ function ProvenanceChain({ refs }: ProvenanceChainProps) {
 type SortKey = "date" | "value";
 type SortDir = "asc" | "desc";
 
+interface SortButtonProps {
+  col: SortKey;
+  label: string;
+  sortKey: SortKey;
+  sortDir: SortDir;
+  onToggle: (col: SortKey) => void;
+}
+
+function SortButton({ col, label, sortKey, sortDir, onToggle }: SortButtonProps) {
+  const active = sortKey === col;
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(col)}
+      className={cn(
+        "inline-flex items-center gap-1 text-xs font-medium",
+        active ? "text-accent" : "text-secondary hover:text-primary",
+      )}
+    >
+      {label}
+      <ArrowUpDown className="h-3 w-3" />
+      {active && (
+        <span className="text-[10px]">{sortDir === "asc" ? "↑" : "↓"}</span>
+      )}
+    </button>
+  );
+}
+
 interface EvidenceListProps {
   signalId: string;
   items: SignalEvidenceItem[];
@@ -205,10 +234,7 @@ export function EvidenceList({
   const handleExport = useCallback(async () => {
     setExporting(true);
     try {
-      const url = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/public/signals/${signalId}/evidence/export?format=csv`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Export failed: ${res.status}`);
-      const blob = await res.blob();
+      const blob = await getSignalEvidenceExportBlob(signalId);
       const href = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = href;
@@ -227,26 +253,6 @@ export function EvidenceList({
   const hasPagination = total > limit;
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
-
-  function SortButton({ col, label }: { col: SortKey; label: string }) {
-    const active = sortKey === col;
-    return (
-      <button
-        type="button"
-        onClick={() => toggleSort(col)}
-        className={cn(
-          "inline-flex items-center gap-1 text-xs font-medium",
-          active ? "text-accent" : "text-secondary hover:text-primary",
-        )}
-      >
-        {label}
-        <ArrowUpDown className="h-3 w-3" />
-        {active && (
-          <span className="text-[10px]">{sortDir === "asc" ? "↑" : "↓"}</span>
-        )}
-      </button>
-    );
-  }
 
   return (
     <div className="mt-6">
@@ -273,8 +279,8 @@ export function EvidenceList({
       {items.length > 1 && (
         <div className="mt-2 flex items-center gap-3 text-xs text-secondary">
           <span>Ordenar:</span>
-          <SortButton col="date" label="Data" />
-          <SortButton col="value" label="Valor" />
+          <SortButton col="date" label="Data" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
+          <SortButton col="value" label="Valor" sortKey={sortKey} sortDir={sortDir} onToggle={toggleSort} />
         </div>
       )}
 

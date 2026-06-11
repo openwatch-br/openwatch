@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Network, Search, Loader2 } from "lucide-react";
 import { searchEntities } from "@/lib/api";
 import type { EntitySearchResult } from "@/lib/types";
-import { RadarBreadcrumb } from "@/components/radar/RadarBreadcrumb";
+import { RadarBreadcrumb } from "@/features/radar/components/RadarBreadcrumb";
 
 export default function NetworkSearchPage() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function NetworkSearchPage() {
   };
 
   return (
-    <div className="ow-mode-working mx-auto w-full max-w-[1280px] px-4 py-6 sm:px-6">
+    <div className="ow-mode-editorial ow-content">
       <RadarBreadcrumb crumbs={[
         { label: "Radar", href: "/radar" },
         { label: "Rede" },

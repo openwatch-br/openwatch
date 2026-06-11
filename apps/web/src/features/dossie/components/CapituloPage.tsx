@@ -7,7 +7,7 @@ import {
   ArrowLeft, AlertTriangle, Building2, User, Calendar,
   Hash, DollarSign, TrendingUp, ArrowRight,
 } from "lucide-react";
-import { useDossieBook } from "@/components/dossie/DossieBookContext";
+import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import type { TimelineEntityDTO, TimelineSignalDTO } from "@/lib/types";
 import { cn, formatBRL, formatDate } from "@/lib/utils";
 import { TYPOLOGY_LABELS } from "@/lib/constants";

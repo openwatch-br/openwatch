@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
+import { useQuery, useSuspenseQuery, keepPreviousData } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -130,41 +131,23 @@ function CaseList({
   search: string;
 }) {
   const [offset, setOffset] = useState(0);
-  const [items, setItems] = useState<RadarV2CaseItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
-  const filterKey = JSON.stringify(filters) + severity;
-
-  useEffect(() => { setOffset(0); }, [filterKey]);
-
-  useEffect(() => {
-    abortRef.current?.abort();
-    const ctrl = new AbortController();
-    abortRef.current = ctrl;
-    setLoading(true);
-    setError(null);
-
-    getRadarV2Cases({
+  const { data, isLoading: loading, isError } = useQuery({
+    queryKey: ["radar-cases", severity, filters.typology, filters.periodFrom, filters.periodTo, offset],
+    queryFn: () => getRadarV2Cases({
       severity: severity || undefined,
       offset,
       limit: PAGE_SIZE,
       typology: filters.typology || undefined,
       period_from: filters.periodFrom || undefined,
       period_to: filters.periodTo || undefined,
-    })
-      .then((data) => {
-        if (ctrl.signal.aborted) return;
-        setTotal(data.total);
-        setItems(data.items as RadarV2CaseItem[]);
-      })
-      .catch(() => { if (!ctrl.signal.aborted) setError("Erro ao carregar dados."); })
-      .finally(() => { if (!ctrl.signal.aborted) setLoading(false); });
+    }),
+    placeholderData: keepPreviousData,
+  });
 
-    return () => ctrl.abort();
-  }, [offset, filterKey, severity, filters.typology, filters.periodFrom, filters.periodTo]);
+  const items = (data?.items ?? []) as RadarV2CaseItem[];
+  const total = data?.total ?? 0;
+  const error = isError ? "Erro ao carregar dados." : null;
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
@@ -241,9 +224,6 @@ function RadarPageInner() {
   const [search, setSearch] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const [summary, setSummary] = useState<RadarV2SummaryResponse | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
-
   const updateParam = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -258,17 +238,14 @@ function RadarPageInner() {
   const hasFilters = !!(typology || severity || periodFrom || periodTo);
   const filters = { typology, periodFrom, periodTo };
 
-  useEffect(() => {
-    setSummaryLoading(true);
-    getRadarV2Summary({
+  const { data: summary } = useSuspenseQuery<RadarV2SummaryResponse>({
+    queryKey: ["radar-summary", typology, periodFrom, periodTo],
+    queryFn: () => getRadarV2Summary({
       typology: typology || undefined,
       period_from: periodFrom || undefined,
       period_to: periodTo || undefined,
-    })
-      .then(setSummary)
-      .catch(() => setSummary(null))
-      .finally(() => setSummaryLoading(false));
-  }, [typology, periodFrom, periodTo]);
+    }),
+  });
 
   const totalSignals = summary?.totals?.signals ?? 0;
   const totalCases = summary?.totals?.cases ?? 0;
@@ -299,16 +276,16 @@ function RadarPageInner() {
   }));
 
   return (
-    <div className="ow-content">
+    <div className="ow-mode-editorial ow-content">
       {/* Hero */}
       <StatHero
         label="Sinais de risco detectados"
-        value={summaryLoading ? "—" : totalSignals.toLocaleString("pt-BR")}
+        value={totalSignals.toLocaleString("pt-BR")}
         subtitle="todos os indícios de todos os detectores"
         stats={[
-          { value: summaryLoading ? "—" : totalCases.toLocaleString("pt-BR"), label: "Casos", tone: "neutral" },
-          { value: summaryLoading ? "—" : criticalCount.toLocaleString("pt-BR"), label: "Críticos", tone: "critical" },
-          { value: summaryLoading ? "—" : String(detectorCount), label: "Detectores", tone: "neutral" },
+          { value: totalCases.toLocaleString("pt-BR"), label: "Casos", tone: "neutral" },
+          { value: criticalCount.toLocaleString("pt-BR"), label: "Críticos", tone: "critical" },
+          { value: String(detectorCount), label: "Detectores", tone: "neutral" },
         ]}
         actions={
           hasFilters ? (
@@ -392,11 +369,7 @@ function RadarPageInner() {
       )}
 
       {/* Flat case list */}
-      {summaryLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} rows={2} />)}
-        </div>
-      ) : totalCases === 0 ? (
+      {totalCases === 0 ? (
         <EmptyState
           icon={<Radar size={40} />}
           title="Nenhum resultado"

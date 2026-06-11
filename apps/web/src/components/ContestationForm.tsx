@@ -6,8 +6,8 @@ import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Select } from "@/components/Select";
 import { cn } from "@/lib/utils";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+import { submitContestation } from "@/lib/api";
+import type { ContestationPayload } from "@/lib/types";
 
 const REPORT_TYPES = [
   { value: "signal_error",  label: "Sinal incorreto ou impreciso" },
@@ -27,7 +27,7 @@ export function ContestationForm({ signalId }: Props) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const [reportType, setReportType] = useState("signal_error");
+  const [reportType, setReportType] = useState<ContestationPayload["report_type"]>("signal_error");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
@@ -61,26 +61,16 @@ export function ContestationForm({ signalId }: Props) {
     setErrorMsg(null);
 
     try {
-      const body: Record<string, unknown> = {
+      const payload: ContestationPayload = {
         signal_id: signalId,
         report_type: reportType,
         requester_name: name.trim(),
         reason: reason.trim(),
+        ...(email.trim() && { requester_email: email.trim() }),
+        ...(evidenceUrl.trim() && { evidence_url: evidenceUrl.trim() }),
       };
-      if (email.trim()) body.requester_email = email.trim();
-      if (evidenceUrl.trim()) body.evidence_url = evidenceUrl.trim();
 
-      const res = await fetch(`${API_BASE}/public/contestations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const detail = await res.json().catch(() => ({}));
-        throw new Error((detail as { detail?: string }).detail ?? `Erro ${res.status}`);
-      }
-
+      await submitContestation(payload);
       setStatus("success");
     } catch (err) {
       setStatus("error");
@@ -132,7 +122,7 @@ export function ContestationForm({ signalId }: Props) {
               label="Tipo de problema"
               options={REPORT_TYPES}
               value={reportType}
-              onChange={(e) => setReportType(e.target.value)}
+              onChange={(e) => setReportType(e.target.value as ContestationPayload["report_type"])}
             />
 
             <Input

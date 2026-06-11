@@ -8,7 +8,7 @@ import {
   ChevronLeft, ChevronRight, Hash, TrendingUp,
   Calendar, GitBranch,
 } from "lucide-react";
-import { useDossieBook } from "@/components/dossie/DossieBookContext";
+import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import { getSignalEvidence, getSignalProvenance } from "@/lib/api";
 import type {
   TimelineEntityDTO,

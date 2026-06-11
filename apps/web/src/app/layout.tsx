@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Geist_Mono, Inter } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import { TabNav } from "@/components/TabNav";
 import { Topbar } from "@/components/Topbar";
 import { SiteFooter } from "@/components/SiteFooter";
 import { CommandPalette } from "@/components/CommandPalette";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -78,6 +80,19 @@ export default function RootLayout({
         </a>
 
         <CommandPalette />
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          toastOptions={{
+            style: {
+              background: "var(--color-surface-2)",
+              border: "1px solid var(--color-border)",
+              color: "var(--color-text)",
+              fontFamily: "var(--font-mono)",
+              fontSize: "0.8125rem",
+            },
+          }}
+        />
 
         {/* Global topbar — all viewports */}
         <Topbar />
@@ -89,12 +104,14 @@ export default function RootLayout({
           </Suspense>
         </div>
 
-        <div className="ow-page ow-page-shell">
-          <main id="main-content" className="ow-main" tabIndex={-1}>
-            {children}
-            <SiteFooter />
-          </main>
-        </div>
+        <Providers>
+          <div className="ow-page ow-page-shell">
+            <main id="main-content" className="ow-main" tabIndex={-1}>
+              {children}
+              <SiteFooter />
+            </main>
+          </div>
+        </Providers>
       </body>
     </html>
   );

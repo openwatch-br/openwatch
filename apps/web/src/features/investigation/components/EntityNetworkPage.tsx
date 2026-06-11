@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { RadarBreadcrumb } from "@/components/radar/RadarBreadcrumb";
+import { RadarBreadcrumb } from "@/features/radar/components/RadarBreadcrumb";
 
 // Lazy-load graph components — only compiled when user navigates here
 const EntityNetworkGraph = dynamic(
@@ -11,7 +11,7 @@ const EntityNetworkGraph = dynamic(
 );
 
 const PathFinder = dynamic(
-  () => import("@/components/investigation-v2/PathFinder").then((m) => ({ default: m.PathFinder })),
+  () => import("@/features/investigation/components/v2/PathFinder").then((m) => ({ default: m.PathFinder })),
   { loading: () => <div className="h-32 animate-pulse bg-surface-subtle rounded-xl" />, ssr: false },
 );
 

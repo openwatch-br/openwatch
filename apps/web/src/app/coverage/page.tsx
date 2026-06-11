@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getCoverageV2Analytics,
   getCoverageV2SourcePreview,
@@ -244,20 +245,7 @@ function RunCard({ run }: { run: CoverageV2LatestRun }) {
 
 // ── KPI Strip ─────────────────────────────────────────────────────────────────
 
-function KpiStrip({ summary, loading }: { summary: CoverageV2SummaryResponse | null; loading: boolean }) {
-  if (loading) {
-    return (
-      <div className="ow-strip">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="ow-strip-item">
-            <div className="ow-skeleton h-6 w-12 rounded mb-1" />
-            <div className="ow-skeleton h-3 w-16 rounded" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
+function KpiStrip({ summary, loading }: { summary: CoverageV2SummaryResponse | null | undefined; loading: boolean }) {
   const t = summary?.totals;
   const sc = t?.status_counts;
   const rt = t?.runtime;
@@ -273,7 +261,16 @@ function KpiStrip({ summary, loading }: { summary: CoverageV2SummaryResponse | n
     { label: "Travados", value: rt?.failed_or_stuck ?? 0, dotColor: rt?.failed_or_stuck ? "var(--color-critical)" : "var(--color-text-3)" },
   ];
 
-  return (
+  return loading ? (
+    <div className="ow-strip">
+      {Array.from({ length: 8 }).map((_, i) => (
+        <div key={i} className="ow-strip-item">
+          <div className="ow-skeleton h-6 w-12 rounded mb-1" />
+          <div className="ow-skeleton h-3 w-16 rounded" />
+        </div>
+      ))}
+    </div>
+  ) : (
     <div className="ow-strip">
       {kpis.map((k) => (
         <div key={k.label} className="ow-strip-item">
@@ -1511,9 +1508,9 @@ function PipelineModal({ open, onClose }: { open: boolean; onClose: () => void }
     try {
       const result: PipelineDispatchResponse = await triggerFullPipeline();
       setStages({
-        ingest: { status: "dispatched", taskId: result.stages.ingest.task_id },
-        entity_resolution: { status: "dispatched", taskId: result.stages.entity_resolution.task_id },
-        signals: { status: "dispatched", taskId: result.stages.signals.task_id },
+        ingest: { status: "dispatched", taskId: result.pipeline_id },
+        entity_resolution: { status: "dispatched", taskId: result.pipeline_id },
+        signals: { status: "dispatched", taskId: result.pipeline_id },
       });
     } catch (e) {
       if (e instanceof Error && e.message.includes("409")) {
@@ -1730,74 +1727,46 @@ function PipelineModal({ open, onClose }: { open: boolean; onClose: () => void }
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function CoveragePage() {
-  const [summary, setSummary] = useState<CoverageV2SummaryResponse | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(true);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-
-  const [sources, setSources] = useState<CoverageV2SourceItem[]>([]);
-  const [sourcesLoading, setSourcesLoading] = useState(true);
-  const [sourcesError, setSourcesError] = useState<string | null>(null);
-
-  const [analytics, setAnalytics] = useState<CoverageV2AnalyticsResponse | null>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(true);
-
-  const [capacity, setCapacity] = useState<PipelineCapacity | null>(null);
+  const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | CoverageStatus>("");
   const [enabledOnly, setEnabledOnly] = useState(false);
-
   const [pipelineModalOpen, setPipelineModalOpen] = useState(false);
-  const [refreshTick, setRefreshTick] = useState(0);
 
-  useEffect(() => {
-    let active = true;
-    setSummaryLoading(true);
-    const fetchSummary = () =>
-      getCoverageV2Summary()
-        .then((d) => { if (active) setSummary(d); })
-        .catch(() => { if (active) setSummaryError("Não foi possível carregar o resumo da cobertura."); })
-        .finally(() => { if (active) setSummaryLoading(false); });
-    fetchSummary();
-    const interval = setInterval(fetchSummary, 10_000);
-    return () => { active = false; clearInterval(interval); };
-  }, [refreshTick]);
+  const { data: summary, isLoading: summaryLoading, isError: summaryIsError } = useQuery({
+    queryKey: ["coverage-summary"],
+    queryFn: getCoverageV2Summary,
+    refetchInterval: 10_000,
+  });
 
-  useEffect(() => {
-    let active = true;
-    function fetchSources() {
-      getCoverageV2Sources({ limit: 100, enabled_only: enabledOnly })
-        .then((r) => { if (active) setSources(r.items); })
-        .catch(() => { if (active) setSourcesError("Falha ao carregar fontes de dados."); })
-        .finally(() => { if (active) setSourcesLoading(false); });
-    }
-    setSourcesLoading(true);
-    fetchSources();
-    const hasRunning = sources?.some((s) => s.runtime.running_jobs > 0);
-    const interval = setInterval(fetchSources, hasRunning ? 5_000 : 15_000);
-    return () => { active = false; clearInterval(interval); };
-  }, [enabledOnly, sources?.some((s) => s.runtime.running_jobs > 0), refreshTick]);
+  const sources = useQuery({
+    queryKey: ["coverage-sources", enabledOnly],
+    queryFn: () => getCoverageV2Sources({ limit: 100, enabled_only: enabledOnly }),
+    refetchInterval: (query) => {
+      const hasRunning = (query.state.data?.items ?? []).some((s) => s.runtime.running_jobs > 0);
+      return hasRunning ? 5_000 : 15_000;
+    },
+  });
 
-  useEffect(() => {
-    let active = true;
-    getCoverageV2Analytics()
-      .then((d) => { if (active) setAnalytics(d); })
-      .catch(() => {})
-      .finally(() => { if (active) setAnalyticsLoading(false); });
-    return () => { active = false; };
-  }, [refreshTick]);
+  const { data: analytics, isLoading: analyticsLoading } = useQuery({
+    queryKey: ["coverage-analytics"],
+    queryFn: getCoverageV2Analytics,
+  });
 
-  useEffect(() => {
-    let active = true;
-    getPipelineCapacity()
-      .then((d) => { if (active) setCapacity(d); })
-      .catch(() => {});
-    return () => { active = false; };
-  }, [refreshTick]);
+  const { data: capacity } = useQuery({
+    queryKey: ["coverage-capacity"],
+    queryFn: getPipelineCapacity,
+  });
+
+  const summaryError = summaryIsError ? "Não foi possível carregar o resumo da cobertura." : null;
+  const sourcesItems = sources.data?.items ?? [];
+  const sourcesLoading = sources.isLoading;
+  const sourcesError = sources.isError ? "Falha ao carregar fontes de dados." : null;
 
   const filteredSources = useMemo(() => {
-    return sources
-      .filter((s) => {
+    return sourcesItems
+      .filter((s: CoverageV2SourceItem) => {
         if (statusFilter && s.worst_status !== statusFilter) return false;
         if (search.trim()) {
           const q = search.toLowerCase();
@@ -1805,17 +1774,17 @@ export default function CoveragePage() {
         }
         return true;
       })
-      .sort((a, b) => {
+      .sort((a: CoverageV2SourceItem, b: CoverageV2SourceItem) => {
         const aRunning = a.runtime.running_jobs > 0 ? 0 : 1;
         const bRunning = b.runtime.running_jobs > 0 ? 0 : 1;
         if (aRunning !== bRunning) return aRunning - bRunning;
         const order: CoverageStatus[] = ["error", "warning", "stale", "ok", "pending"];
         return order.indexOf(a.worst_status) - order.indexOf(b.worst_status);
       });
-  }, [sources, search, statusFilter]);
+  }, [sourcesItems, search, statusFilter]);
 
   return (
-    <div className="ow-mode-working ow-content">
+    <div className="ow-mode-editorial ow-content">
       {/* ── Page Header ─────────────────────────────────────────── */}
       <PageHeader
         eyebrow="SISTEMA"
@@ -1859,7 +1828,7 @@ export default function CoveragePage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setRefreshTick((t) => t + 1)}
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["coverage"] })}
               disabled={summaryLoading}
             >
               <RefreshCw className="h-3.5 w-3.5" />
@@ -1913,9 +1882,9 @@ export default function CoveragePage() {
 
         {/* ── Live Activity Panel ──────────────────────────────── */}
         {!sourcesLoading && (() => {
-          const activeJobs = sources
-            .filter(s => s.runtime.running_jobs > 0)
-            .flatMap(s => s.runtime.active_job_names.map(job => ({
+          const activeJobs = sourcesItems
+            .filter((s: CoverageV2SourceItem) => s.runtime.running_jobs > 0)
+            .flatMap((s: CoverageV2SourceItem) => s.runtime.active_job_names.map((job: string) => ({
               connector: s.connector_label,
               connectorKey: s.connector,
               job,
@@ -1923,8 +1892,8 @@ export default function CoveragePage() {
               rate: s.runtime.estimated_rate_per_min,
               elapsed: s.runtime.elapsed_seconds,
             })));
-          const errorJobs = sources.filter(s => s.runtime.error_jobs > 0);
-          const pendingSources = sources.filter(s => s.worst_status === "pending" && s.runtime.running_jobs === 0);
+          const errorJobs = sourcesItems.filter((s: CoverageV2SourceItem) => s.runtime.error_jobs > 0);
+          const pendingSources = sourcesItems.filter((s: CoverageV2SourceItem) => s.worst_status === "pending" && s.runtime.running_jobs === 0);
           const totalRunning = activeJobs.length;
           const pipelineStages = summary?.pipeline.stages ?? [];
           const nextStage = pipelineStages.find(s => s.status === "stale" || s.status === "pending");

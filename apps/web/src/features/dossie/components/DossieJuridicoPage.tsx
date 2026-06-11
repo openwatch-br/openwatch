@@ -15,7 +15,7 @@ import {
   Shield,
   BarChart3,
 } from "lucide-react";
-import { useDossieBook } from "@/components/dossie/DossieBookContext";
+import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 import type { LegalHypothesisDTO, TimelineSignalDTO } from "@/lib/types";
 import { cn } from "@/lib/utils";
 

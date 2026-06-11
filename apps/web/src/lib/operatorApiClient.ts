@@ -3,16 +3,22 @@
  *
  * HTTP client for /internal/* operator endpoints.
  * This file is intentionally separate from publicApiClient.ts to make
- * the security boundary explicit: internal endpoints require X-Internal-Api-Key
- * and must never be exposed to public users.
+ * the security boundary explicit: internal endpoints require
+ * Authorization: Bearer <INTERNAL_API_KEY> and must never be exposed to
+ * public users.
  *
  * IMPORTANT: Only import this file in operator/admin pages or components.
  */
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const INTERNAL_API_KEY =
+  process.env.NEXT_PUBLIC_INTERNAL_API_KEY ??
+  "dev-internal-key-change-in-production";
+
+const authHeader = { Authorization: `Bearer ${INTERNAL_API_KEY}` } as const;
 
 async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, { headers: authHeader });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -20,7 +26,10 @@ async function fetchJSON<T>(path: string): Promise<T> {
 }
 
 async function postJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { method: "POST" });
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: authHeader,
+  });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -31,11 +40,8 @@ async function postJSON<T>(path: string): Promise<T> {
 
 export interface PipelineDispatchResponse {
   status: "dispatched";
-  stages: {
-    ingest: { task_id: string };
-    entity_resolution: { task_id: string };
-    signals: { task_id: string };
-  };
+  pipeline_id: string;
+  stages: string[];
 }
 
 export interface PipelineStatusResponse {

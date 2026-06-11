@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Suspense } from "react";
+import { useSuspenseQueries } from "@tanstack/react-query";
 import { getRadarV2Cases, getRadarV2Signals } from "@/lib/api";
 import type {
   RadarV2CaseItem,
@@ -9,7 +9,7 @@ import type {
   RadarV2SummaryResponse,
   SignalSeverity,
 } from "@/lib/types";
-import { RadarCaseCard } from "@/components/radar/RadarCaseCard";
+import { RadarCaseCard } from "@/features/radar/components/RadarCaseCard";
 import { SignalCard } from "./SignalCard";
 import { TypologyHeatmap } from "./TypologyHeatmap";
 import { TableSkeleton } from "@/components/Skeleton";
@@ -31,23 +31,22 @@ interface OverviewSectionProps {
   onTabChange: (tab: "overview" | "dossie" | "rede" | "juridico") => void;
 }
 
-export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypologyClick, onTabChange }: OverviewSectionProps) {
-  const [topCases, setTopCases] = useState<RadarV2CaseItem[]>([]);
-  const [topSignals, setTopSignals] = useState<RadarV2SignalItem[]>([]);
-  const [casesLoading, setCasesLoading] = useState(true);
-  const [signalsLoading, setSignalsLoading] = useState(true);
+function OverviewSectionInner({
+  summary,
+  summaryLoading,
+  onSignalClick,
+  onTypologyClick,
+  onTabChange,
+}: OverviewSectionProps) {
+  const [{ data: casesData }, { data: signalsData }] = useSuspenseQueries({
+    queries: [
+      { queryKey: ["radar-top-cases"], queryFn: () => getRadarV2Cases({ limit: 5 }) },
+      { queryKey: ["radar-top-signals"], queryFn: () => getRadarV2Signals({ limit: 5 }) },
+    ],
+  });
 
-  useEffect(() => {
-    getRadarV2Cases({ limit: 5 })
-      .then((data) => setTopCases(data.items as RadarV2CaseItem[]))
-      .catch(() => setTopCases([]))
-      .finally(() => setCasesLoading(false));
-
-    getRadarV2Signals({ limit: 5 })
-      .then((data) => setTopSignals(data.items))
-      .catch(() => setTopSignals([]))
-      .finally(() => setSignalsLoading(false));
-  }, []);
+  const topCases = casesData.items as RadarV2CaseItem[];
+  const topSignals = signalsData.items as RadarV2SignalItem[];
 
   const totalSeverity = summary
     ? summary.severity_counts.critical + summary.severity_counts.high + summary.severity_counts.medium + summary.severity_counts.low
@@ -56,7 +55,6 @@ export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypo
   return (
     <div className="flex flex-1 mx-auto w-full max-w-[1280px] relative">
       <div className="flex-1 min-w-0 px-4 py-6 sm:px-6 space-y-8">
-      {/* Top row: Cases + Signals side by side */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top Cases */}
         <div>
@@ -73,16 +71,12 @@ export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypo
             </button>
           </div>
 
-          {casesLoading && <TableSkeleton rows={3} />}
-
-          {!casesLoading && topCases.length === 0 && (
+          {topCases.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface-card p-8 text-center">
               <p className="text-sm text-muted">Nenhum caso detectado ainda.</p>
               <p className="text-xs text-muted mt-1">Execute o pipeline de sinais para gerar casos.</p>
             </div>
-          )}
-
-          {!casesLoading && topCases.length > 0 && (
+          ) : (
             <div className="space-y-2">
               {topCases.map((c) => (
                 <RadarCaseCard
@@ -115,16 +109,12 @@ export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypo
             </button>
           </div>
 
-          {signalsLoading && <TableSkeleton rows={3} />}
-
-          {!signalsLoading && topSignals.length === 0 && (
+          {topSignals.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface-card p-8 text-center">
               <p className="text-sm text-muted">Nenhum sinal detectado ainda.</p>
               <p className="text-xs text-muted mt-1">Execute o pipeline de sinais para gerar deteccoes.</p>
             </div>
-          )}
-
-          {!signalsLoading && topSignals.length > 0 && (
+          ) : (
             <div className="space-y-2">
               {topSignals.map((s) => (
                 <SignalCard key={s.id} signal={s} onClick={onSignalClick} />
@@ -134,7 +124,6 @@ export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypo
         </div>
       </div>
 
-      {/* Bottom row: Typology Heatmap + Severity Distribution */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Typology distribution */}
         <div>
@@ -185,5 +174,19 @@ export function OverviewSection({ summary, summaryLoading, onSignalClick, onTypo
       </div>
       </div>
     </div>
+  );
+}
+
+export function OverviewSection(props: OverviewSectionProps) {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-1 mx-auto w-full max-w-[1280px]">
+        <div className="flex-1 min-w-0 px-4 py-6 sm:px-6">
+          <TableSkeleton rows={5} />
+        </div>
+      </div>
+    }>
+      <OverviewSectionInner {...props} />
+    </Suspense>
   );
 }

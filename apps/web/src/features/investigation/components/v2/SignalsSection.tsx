@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getRadarV2Signals, getRadarV2SignalPreview } from "@/lib/api";
-import type { RadarV2SignalItem, RadarV2SignalPreviewResponse } from "@/lib/types";
+import type { RadarV2SignalPreviewResponse } from "@/lib/types";
 import { SignalCard } from "./SignalCard";
 import { SignalInlineFilters } from "./SignalInlineFilters";
-import { RadarDetailPanel } from "@/components/radar/RadarDetailPanel";
+import { RadarDetailPanel } from "@/features/radar/components/RadarDetailPanel";
 import { TableSkeleton } from "@/components/Skeleton";
 import { Button } from "@/components/Button";
 
@@ -35,23 +36,16 @@ export function SignalsSection() {
     [router, searchParams],
   );
 
-  const [search, setSearch]     = useState("");
-  const [signals, setSignals]   = useState<RadarV2SignalItem[]>([]);
-  const [total, setTotal]       = useState(0);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState<string | null>(null);
-
-  // Detail panel
+  const [search, setSearch] = useState("");
   const [panelOpen, setPanelOpen]           = useState(false);
   const [panelLoading, setPanelLoading]     = useState(false);
   const [panelError, setPanelError]         = useState<string | null>(null);
   const [signalPreview, setSignalPreview]   = useState<RadarV2SignalPreviewResponse | null>(null);
   const [activeSignalId, setActiveSignalId] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-    getRadarV2Signals({
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["radar-signals", sigOffset, sigTypology, sigSeverity, sigSort, sigFrom, sigTo],
+    queryFn: () => getRadarV2Signals({
       offset: sigOffset,
       limit: PAGE_SIZE,
       typology: sigTypology || undefined,
@@ -59,14 +53,12 @@ export function SignalsSection() {
       sort: (sigSort as "analysis_date" | "ingestion_date") || undefined,
       period_from: sigFrom || undefined,
       period_to: sigTo || undefined,
-    })
-      .then((data) => {
-        setSignals(data.items);
-        setTotal(data.total);
-      })
-      .catch(() => setError("Erro ao carregar sinais."))
-      .finally(() => setLoading(false));
-  }, [sigOffset, sigTypology, sigSeverity, sigSort, sigFrom, sigTo]);
+    }),
+    placeholderData: keepPreviousData,
+  });
+
+  const signals = data?.items ?? [];
+  const total = data?.total ?? 0;
 
   const filteredSignals = useMemo(() => {
     if (!search.trim()) return signals;
@@ -92,12 +84,11 @@ export function SignalsSection() {
   return (
     <div className="flex flex-1 mx-auto w-full max-w-[1280px] relative">
       <div className={`flex-1 min-w-0 overflow-y-auto px-4 py-6 sm:px-6 transition-all ${panelOpen ? "lg:mr-[480px]" : ""}`}>
-        {/* Header + filters */}
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted">Sinais Detectados</p>
             <p className="text-sm font-semibold text-primary mt-0.5">
-              {loading ? "—" : `${total.toLocaleString("pt-BR")} sinais`}
+              {isLoading ? "—" : `${total.toLocaleString("pt-BR")} sinais`}
             </p>
             <p className="text-xs text-secondary mt-0.5">
               Sinais individuais de irregularidade detectados pelo motor de analise
@@ -123,29 +114,25 @@ export function SignalsSection() {
           />
         </div>
 
-        {/* Error */}
-        {error && (
+        {isError && (
           <div className="rounded-xl border border-error/20 bg-error/5 p-6 text-center">
-            <p className="text-sm text-error">{error}</p>
+            <p className="text-sm text-error">Erro ao carregar sinais.</p>
             <Button variant="secondary" size="sm" className="mt-3" onClick={() => window.location.reload()}>
               Tentar novamente
             </Button>
           </div>
         )}
 
-        {/* Loading */}
-        {loading && !error && <TableSkeleton rows={6} />}
+        {isLoading && !isError && <TableSkeleton rows={6} />}
 
-        {/* Empty */}
-        {!loading && !error && filteredSignals.length === 0 && (
+        {!isLoading && !isError && filteredSignals.length === 0 && (
           <div className="rounded-xl border border-border bg-surface-card p-12 text-center">
             <p className="text-sm font-medium text-secondary">Nenhum sinal encontrado</p>
             <p className="mt-1 text-xs text-muted">Ajuste os filtros ou aguarde novos dados do pipeline.</p>
           </div>
         )}
 
-        {/* Signal list */}
-        {!loading && !error && filteredSignals.length > 0 && (
+        {!isLoading && !isError && filteredSignals.length > 0 && (
           <div className="space-y-3">
             {filteredSignals.map((s) => (
               <SignalCard
@@ -158,8 +145,7 @@ export function SignalsSection() {
           </div>
         )}
 
-        {/* Pagination */}
-        {!loading && totalPages > 1 && (
+        {!isLoading && totalPages > 1 && (
           <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
             <span className="text-xs text-muted">
               Pagina {currentPage} de {totalPages} · {total} sinais
@@ -188,7 +174,6 @@ export function SignalsSection() {
         )}
       </div>
 
-      {/* Detail panel */}
       <RadarDetailPanel
         open={panelOpen}
         type="signal"

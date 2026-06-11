@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useCaseGraph, type EdgeContext, type GLink } from "./useCaseGraph";
-import { useDossieBook } from "@/components/dossie/DossieBookContext";
+import { useDossieBook } from "@/features/dossie/components/DossieBookContext";
 
 /**
  * Wraps `useCaseGraph` and enriches edges with investigative context

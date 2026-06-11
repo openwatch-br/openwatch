@@ -3,6 +3,8 @@ import type {
   CaseDetail,
   CaseGraphResponse,
   CaseProvenanceWeb,
+  ContestationPayload,
+  ContestationResponse,
   CoverageV2AnalyticsResponse,
   CoverageV2MapResponse,
   CoverageV2SourcePreviewResponse,
@@ -48,12 +50,26 @@ async function fetchJSON<T>(path: string): Promise<T> {
   return res.json();
 }
 
-async function postJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { method: "POST" });
+async function postJSON<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    ...(body !== undefined && {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+  });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
   return res.json();
+}
+
+async function fetchBlob(path: string): Promise<Blob> {
+  const res = await fetch(`${API_BASE}${path}`);
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status} ${res.statusText}`);
+  }
+  return res.blob();
 }
 
 export function getApiHeartbeat(): Promise<ApiHeartbeatResponse> {
@@ -233,6 +249,16 @@ export function getSignalEvidence(
   if (params?.sort) search.set("sort", params.sort);
   const qs = search.toString();
   return fetchJSON(`/public/signal/${id}/evidence${qs ? `?${qs}` : ""}`);
+}
+
+export function getSignalEvidenceExportBlob(signalId: string): Promise<Blob> {
+  return fetchBlob(`/public/signals/${signalId}/evidence/export?format=csv`);
+}
+
+export function submitContestation(
+  payload: ContestationPayload,
+): Promise<ContestationResponse> {
+  return postJSON<ContestationResponse>("/public/contestations", payload);
 }
 
 export function getCase(id: string): Promise<CaseDetail> {

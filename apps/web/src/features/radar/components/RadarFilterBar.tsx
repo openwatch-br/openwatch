@@ -1,7 +1,7 @@
 "use client";
 
 import { CORRUPTION_TYPE_LABELS, SEVERITY_LABELS, SPHERE_LABELS, TYPOLOGY_LABELS } from "@/lib/constants";
-import type { RadarViewMode } from "@/components/radar/RadarViewTabs";
+import type { RadarViewMode } from "@/features/radar/components/RadarViewTabs";
 import { ArrowUpDown, CalendarRange, Filter, Globe, Scale, X } from "lucide-react";
 
 interface RadarFilterBarProps {
