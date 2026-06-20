@@ -10,11 +10,11 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
+from openwatch_config import settings
+from openwatch_models.typology_catalog import get_public_typology, list_public_typologies
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core_client import CoreClient
-from openwatch_config import settings
-from openwatch_models.typology_catalog import get_public_typology, list_public_typologies
 
 
 def _client() -> CoreClient:
