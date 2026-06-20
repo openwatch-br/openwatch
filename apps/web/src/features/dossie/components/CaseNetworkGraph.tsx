@@ -1,8 +1,9 @@
 'use client';
 
-// Case network graph — two view modes:
-//   "force"  : Sigma.js + ForceAtlas2 (WebGL, node drag, category filter)
+// Case network graph — three view modes:
+//   "ego"    : SVG radial ego network (ICIJ pattern — default, best for laypeople)
 //   "chrono" : SVG timeline positioned by first event date per entity
+//   "force"  : Sigma.js + ForceAtlas2 (WebGL, node drag, category filter)
 // Import via next/dynamic with ssr:false — Sigma touches window.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -16,6 +17,7 @@ import { NODE_COLOR_FALLBACK, edgeColor, edgeSize, nodeColor } from '@/component
 import { useCaseGraph } from '@/hooks/useCaseGraph';
 import type { DossierTimelineResponse } from '@/lib/types';
 import { CaseChronologicGraph } from './CaseChronologicGraph';
+import { CaseEgoGraph } from './CaseEgoGraph';
 
 const TYPE_LABEL: Record<string, string> = {
     person: 'Pessoa',
@@ -33,7 +35,7 @@ function nodeSizeForDegree(degree: number, isSeed: boolean): number {
 
 const FADED = '#26262C';
 
-type ViewMode = 'force' | 'chrono';
+type ViewMode = 'ego' | 'chrono' | 'force';
 
 interface CaseNetworkGraphProps {
     caseId: string;
@@ -46,7 +48,7 @@ interface CaseNetworkGraphProps {
 export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focusSignalId, timelineRaw }) => {
     const { graphData, degreeMap, erPending } = useCaseGraph(caseId, focusSignalId);
 
-    const [viewMode, setViewMode] = useState<ViewMode>('chrono');
+    const [viewMode, setViewMode] = useState<ViewMode>('ego');
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const sigmaRef = useRef<Sigma | null>(null);
@@ -214,6 +216,12 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
 
     const canChrono = timelineRaw !== undefined;
 
+    const VIEW_TABS: Array<{ id: ViewMode; label: string; available: boolean }> = [
+        { id: 'ego', label: 'Radar', available: true },
+        { id: 'chrono', label: 'Cronológico', available: canChrono },
+        { id: 'force', label: 'Força', available: true },
+    ];
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {/* Toolbar */}
@@ -227,77 +235,68 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                         overflow: 'hidden',
                     }}
                 >
-                    {canChrono && (
+                    {VIEW_TABS.filter(t => t.available).map((tab, i, arr) => (
                         <button
+                            key={tab.id}
                             type='button'
-                            onClick={() => setViewMode('chrono')}
+                            onClick={() => setViewMode(tab.id)}
                             style={{
                                 fontSize: 11,
                                 fontFamily: 'var(--font-mono)',
                                 padding: '4px 12px',
-                                background: viewMode === 'chrono' ? 'var(--color-accent, #5CA8FF)' : 'var(--color-surface)',
-                                color: viewMode === 'chrono' ? '#fff' : 'var(--color-text-2)',
+                                background:
+                                    viewMode === tab.id
+                                        ? 'var(--color-accent, #5CA8FF)'
+                                        : 'var(--color-surface)',
+                                color: viewMode === tab.id ? '#fff' : 'var(--color-text-2)',
                                 border: 'none',
                                 cursor: 'pointer',
-                                borderRight: '1px solid var(--color-border)',
+                                borderRight:
+                                    i < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
                             }}
                         >
-                            Cronológico
+                            {tab.label}
                         </button>
-                    )}
-                    <button
-                        type='button'
-                        onClick={() => setViewMode('force')}
-                        style={{
-                            fontSize: 11,
-                            fontFamily: 'var(--font-mono)',
-                            padding: '4px 12px',
-                            background: viewMode === 'force' ? 'var(--color-accent, #5CA8FF)' : 'var(--color-surface)',
-                            color: viewMode === 'force' ? '#fff' : 'var(--color-text-2)',
-                            border: 'none',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        Força
-                    </button>
+                    ))}
                 </div>
 
                 {/* Type filter legend (force mode only) */}
-                {viewMode === 'force' && presentTypes.map((type) => {
-                    const off = hiddenTypes.has(type);
-                    return (
-                        <button
-                            key={type}
-                            type='button'
-                            onClick={() => toggleType(type)}
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                fontSize: 12,
-                                fontFamily: 'var(--font-mono)',
-                                color: off ? 'var(--color-text-3)' : 'var(--color-text-2)',
-                                background: 'var(--color-surface)',
-                                border: '1px solid var(--color-border)',
-                                borderRadius: 'var(--radius-full)',
-                                padding: '3px 10px',
-                                cursor: 'pointer',
-                                opacity: off ? 0.5 : 1,
-                            }}
-                        >
-                            <span
-                                aria-hidden
+                {viewMode === 'force' &&
+                    presentTypes.map(type => {
+                        const off = hiddenTypes.has(type);
+                        return (
+                            <button
+                                key={type}
+                                type='button'
+                                onClick={() => toggleType(type)}
                                 style={{
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: '50%',
-                                    background: nodeColor(type) ?? NODE_COLOR_FALLBACK,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 6,
+                                    fontSize: 12,
+                                    fontFamily: 'var(--font-mono)',
+                                    color: off ? 'var(--color-text-3)' : 'var(--color-text-2)',
+                                    background: 'var(--color-surface)',
+                                    border: '1px solid var(--color-border)',
+                                    borderRadius: 'var(--radius-full)',
+                                    padding: '3px 10px',
+                                    cursor: 'pointer',
+                                    opacity: off ? 0.5 : 1,
                                 }}
-                            />
-                            {TYPE_LABEL[type] ?? type}
-                        </button>
-                    );
-                })}
+                            >
+                                <span
+                                    aria-hidden
+                                    style={{
+                                        width: 10,
+                                        height: 10,
+                                        borderRadius: '50%',
+                                        background: nodeColor(type) ?? NODE_COLOR_FALLBACK,
+                                    }}
+                                />
+                                {TYPE_LABEL[type] ?? type}
+                            </button>
+                        );
+                    })}
 
                 <span
                     style={{
@@ -307,21 +306,29 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                         marginLeft: 'auto',
                     }}
                 >
-                    {viewMode === 'force'
-                        ? 'arraste os nós · passe o mouse para destacar vínculos'
-                        : 'eixo X = data · lanes = tipo de entidade'}
+                    {viewMode === 'ego' && 'clique nos nós para explorar · centro = entidade investigada'}
+                    {viewMode === 'chrono' && 'eixo X = data · lanes = tipo de entidade'}
+                    {viewMode === 'force' && 'arraste os nós · passe o mouse para destacar vínculos'}
                 </span>
             </div>
 
             {/* Views */}
-            {viewMode === 'chrono' && timelineRaw ? (
+            {viewMode === 'ego' && (
+                <CaseEgoGraph
+                    nodes={graphData.nodes}
+                    links={graphData.links}
+                    degreeMap={degreeMap}
+                />
+            )}
+            {viewMode === 'chrono' && timelineRaw && (
                 <CaseChronologicGraph
                     nodes={graphData.nodes}
                     links={graphData.links}
                     degreeMap={degreeMap}
                     timelineRaw={timelineRaw}
                 />
-            ) : (
+            )}
+            {viewMode === 'force' && (
                 <div
                     ref={containerRef}
                     style={{
