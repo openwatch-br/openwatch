@@ -62,6 +62,7 @@ export function useCaseGraph(caseId: string, focusSignalId?: string, depth: numb
 
   const { data: raw } = useSuspenseQuery<CaseGraphResponse>({
     queryKey: ["case-graph", caseId, depth, focusSignalId ?? null],
+    staleTime: 5 * 60 * 1000,
     // "placeholder" é o param sintético do generateStaticParams — buscar
     // durante o prerender derruba o build (422 da API). Grafo vazio.
     queryFn: () =>
