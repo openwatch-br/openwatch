@@ -1,8 +1,8 @@
 'use client';
 
-// Flourish-style network graph for a case (Sigma.js + graphology, WebGL).
-// Force-directed layout, node size by degree, color by entity type,
-// hover-highlight neighbors, node drag, and a category legend that filters.
+// Case network graph — two view modes:
+//   "force"  : Sigma.js + ForceAtlas2 (WebGL, node drag, category filter)
+//   "chrono" : SVG timeline positioned by first event date per entity
 // Import via next/dynamic with ssr:false — Sigma touches window.
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -12,8 +12,10 @@ import forceAtlas2 from 'graphology-layout-forceatlas2';
 import FA2LayoutSupervisor from 'graphology-layout-forceatlas2/worker';
 import Sigma from 'sigma';
 
-import { useCaseGraph } from '@/hooks/useCaseGraph';
 import { NODE_COLOR_FALLBACK, edgeColor, edgeSize, nodeColor } from '@/components/graph/graphStyle';
+import { useCaseGraph } from '@/hooks/useCaseGraph';
+import type { DossierTimelineResponse } from '@/lib/types';
+import { CaseChronologicGraph } from './CaseChronologicGraph';
 
 const TYPE_LABEL: Record<string, string> = {
     person: 'Pessoa',
@@ -31,14 +33,20 @@ function nodeSizeForDegree(degree: number, isSeed: boolean): number {
 
 const FADED = '#26262C';
 
+type ViewMode = 'force' | 'chrono';
+
 interface CaseNetworkGraphProps {
     caseId: string;
     focusSignalId?: string;
+    /** Raw dossier timeline — enables the chronological view mode. */
+    timelineRaw?: DossierTimelineResponse;
 }
 
-/** Self-contained case network graph with Flourish-style interactivity. */
-export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focusSignalId }) => {
+/** Self-contained case network graph with two view modes. */
+export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focusSignalId, timelineRaw }) => {
     const { graphData, degreeMap, erPending } = useCaseGraph(caseId, focusSignalId);
+
+    const [viewMode, setViewMode] = useState<ViewMode>('chrono');
 
     const containerRef = useRef<HTMLDivElement | null>(null);
     const sigmaRef = useRef<Sigma | null>(null);
@@ -59,7 +67,9 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         sigmaRef.current?.refresh();
     }, [hiddenTypes]);
 
+    // Force-directed Sigma.js graph — only active when viewMode === 'force'
     useEffect(() => {
+        if (viewMode !== 'force') return undefined;
         const container = containerRef.current;
         if (!container) return undefined;
 
@@ -89,7 +99,6 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         const supervisor = new FA2LayoutSupervisor(graph, { settings });
 
         const renderer = new Sigma(graph, container, {
-            // Container may be 0-width mid route-transition; Sigma renders once it gains size.
             allowInvalidContainer: true,
             renderEdgeLabels: false,
             labelColor: { color: '#B9B9C0' },
@@ -128,7 +137,6 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         });
         sigmaRef.current = renderer;
 
-        // Hover-highlight neighbors
         renderer.on('enterNode', ({ node }) => {
             hoveredRef.current = node;
             container.style.cursor = 'grab';
@@ -140,7 +148,6 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
             renderer.refresh();
         });
 
-        // Node drag
         let dragged: string | null = null;
         renderer.on('downNode', ({ node }) => {
             dragged = node;
@@ -157,7 +164,7 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
             e.original.preventDefault();
             e.original.stopPropagation();
         });
-        const release = () => {
+        const release = (): void => {
             if (dragged) graph.removeNodeAttribute(dragged, 'highlighted');
             dragged = null;
             container.style.cursor = 'default';
@@ -165,7 +172,7 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         mouse.on('mouseup', release);
 
         supervisor.start();
-        const stopTimer = setTimeout(() => supervisor.stop(), 3000);
+        const stopTimer = setTimeout(() => supervisor.stop(), 4000);
 
         return () => {
             clearTimeout(stopTimer);
@@ -174,7 +181,7 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
             sigmaRef.current = null;
             hoveredRef.current = null;
         };
-    }, [graphData, degreeMap]);
+    }, [graphData, degreeMap, viewMode]);
 
     function toggleType(type: string): void {
         setHiddenTypes((prev) => {
@@ -205,16 +212,63 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         );
     }
 
+    const canChrono = timelineRaw !== undefined;
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {/* Legend (category filter) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                {presentTypes.map((type) => {
+            {/* Toolbar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                {/* View mode toggle */}
+                <div
+                    style={{
+                        display: 'inline-flex',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-md)',
+                        overflow: 'hidden',
+                    }}
+                >
+                    {canChrono && (
+                        <button
+                            type='button'
+                            onClick={() => setViewMode('chrono')}
+                            style={{
+                                fontSize: 11,
+                                fontFamily: 'var(--font-mono)',
+                                padding: '4px 12px',
+                                background: viewMode === 'chrono' ? 'var(--color-accent, #5CA8FF)' : 'var(--color-surface)',
+                                color: viewMode === 'chrono' ? '#fff' : 'var(--color-text-2)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                borderRight: '1px solid var(--color-border)',
+                            }}
+                        >
+                            Cronológico
+                        </button>
+                    )}
+                    <button
+                        type='button'
+                        onClick={() => setViewMode('force')}
+                        style={{
+                            fontSize: 11,
+                            fontFamily: 'var(--font-mono)',
+                            padding: '4px 12px',
+                            background: viewMode === 'force' ? 'var(--color-accent, #5CA8FF)' : 'var(--color-surface)',
+                            color: viewMode === 'force' ? '#fff' : 'var(--color-text-2)',
+                            border: 'none',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        Força
+                    </button>
+                </div>
+
+                {/* Type filter legend (force mode only) */}
+                {viewMode === 'force' && presentTypes.map((type) => {
                     const off = hiddenTypes.has(type);
                     return (
                         <button
                             key={type}
-                            type="button"
+                            type='button'
                             onClick={() => toggleType(type)}
                             style={{
                                 display: 'inline-flex',
@@ -244,6 +298,7 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                         </button>
                     );
                 })}
+
                 <span
                     style={{
                         fontSize: 11,
@@ -252,20 +307,32 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                         marginLeft: 'auto',
                     }}
                 >
-                    arraste os nós · passe o mouse para destacar vínculos
+                    {viewMode === 'force'
+                        ? 'arraste os nós · passe o mouse para destacar vínculos'
+                        : 'eixo X = data · lanes = tipo de entidade'}
                 </span>
             </div>
 
-            <div
-                ref={containerRef}
-                style={{
-                    height: 560,
-                    width: '100%',
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-md)',
-                }}
-            />
+            {/* Views */}
+            {viewMode === 'chrono' && timelineRaw ? (
+                <CaseChronologicGraph
+                    nodes={graphData.nodes}
+                    links={graphData.links}
+                    degreeMap={degreeMap}
+                    timelineRaw={timelineRaw}
+                />
+            ) : (
+                <div
+                    ref={containerRef}
+                    style={{
+                        height: 560,
+                        width: '100%',
+                        background: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-md)',
+                    }}
+                />
+            )}
         </div>
     );
 };

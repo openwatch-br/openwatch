@@ -41,7 +41,7 @@ export default function CaseDossierPage(): React.ReactElement {
     const params = useParams();
     const searchParams = useSearchParams();
     const caseId = String(params['caseId'] ?? '');
-    const { model } = useCaseTimeline(caseId);
+    const { model, raw } = useCaseTimeline(caseId);
     const view = searchParams.get('tab') === 'rede' ? 'rede' : 'cronologia';
 
     return (
@@ -52,7 +52,7 @@ export default function CaseDossierPage(): React.ReactElement {
                 <CaseTimeline model={model} />
             ) : (
                 <Suspense fallback={<GraphFallback />}>
-                    <CaseNetworkGraph caseId={caseId} />
+                    <CaseNetworkGraph caseId={caseId} timelineRaw={raw} />
                 </Suspense>
             )}
         </div>
