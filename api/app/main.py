@@ -4,7 +4,10 @@ import redis.asyncio as aioredis
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from openwatch_config import settings
+from openwatch_utils.logging import setup_logging
 
+from api.app.db import engine
 from api.app.middleware.cache import CacheMiddleware
 from api.app.middleware.pii_scrub import PIIScrubMiddleware
 from api.app.middleware.rate_limit import RateLimitMiddleware
@@ -12,9 +15,6 @@ from api.app.middleware.security_events import SecurityEventsMiddleware
 from api.app.routers.internal import router as internal_router
 from api.app.routers.public import router as public_router
 from api.core_client import CoreNotFoundError, CoreServiceError
-from api.app.db import engine
-from openwatch_config import settings
-from openwatch_utils.logging import setup_logging
 
 
 @asynccontextmanager

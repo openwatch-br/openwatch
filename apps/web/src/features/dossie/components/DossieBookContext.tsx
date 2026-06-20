@@ -94,19 +94,5 @@ export function buildBookSequence(
     }
   }
 
-  // Network page
-  pages.push({
-    type: "network",
-    href: `/radar/dossie/${caseId}/rede`,
-    label: "Rede de Conexoes",
-  });
-
-  // Legal page
-  pages.push({
-    type: "legal",
-    href: `/radar/dossie/${caseId}/juridico`,
-    label: "Hipoteses Juridicas",
-  });
-
   return pages;
 }

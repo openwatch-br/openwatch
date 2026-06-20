@@ -14,11 +14,10 @@ import hashlib
 import re
 import time
 
+from openwatch_utils.logging import log
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-
-from openwatch_utils.logging import log
 
 # Detail reads audited na trilha LGPD (quem acessou o quê).
 # (regex de rota, resource_type) — o último segmento é o resource_id.

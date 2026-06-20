@@ -4,6 +4,61 @@ from datetime import datetime
 from io import StringIO
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
+from openwatch_models.contestation import Contestation
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PUBLIC API ROUTER — SPLIT-READY ARCHITECTURE
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# This router is designed to work in TWO modes:
+#
+# 1. MONOREPO MODE (pre-split)
+#    - Direct database access via SQLAlchemy async
+#    - Uses core_adapter.py for all queries
+#    - All endpoints return full internal data structures
+#
+# 2. SPLIT MODE (post-split in openwatch-public repository)
+#    - HTTP calls to openwatch-core private service via CoreClient
+#    - Uses split_ready_adapter.py for dual-mode access
+#    - All endpoints apply PublicSignalSummary filtering automatically
+#    - Sensitive internal fields are stripped (factors, weights, etc.)
+#
+# MIGRATION PATH POST-SPLIT:
+# - CoreClient is automatically selected when CORE_SERVICE_URL is set
+# - All adapters transparently switch to HTTP mode
+# - PublicSignalSummary and PublicEntitySummary filtering is applied
+# - Endpoint signatures remain UNCHANGED
+#
+# See: api/app/adapters/split_ready_adapter.py for dual-mode patterns
+# See: shared/models/public_filter.py for PublicSignalSummary schema
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# ── Public API response schemas (API contract — public layer) ─────────────────
+from openwatch_models.coverage_v2 import (
+    CoverageV2AnalyticsResponse,
+    CoverageV2MapResponse,
+    CoverageV2RunDetailResponse,
+    CoverageV2SourcePreviewResponse,
+    CoverageV2SourcesResponse,
+    CoverageV2SummaryResponse,
+    PublicSourcesResponse,
+)
+from openwatch_models.graph import (
+    CaseGraphResponse,
+    EntityPathResponse,
+    NeighborhoodResponse,
+    SignalGraphResponse,
+)
+from openwatch_models.public_filter import to_public_signal
+from openwatch_models.radar import (
+    RadarV2CaseListResponse,
+    RadarV2CasePreviewResponse,
+    RadarV2CoverageResponse,
+    RadarV2SignalListResponse,
+    RadarV2SignalPreviewResponse,
+    RadarV2SummaryResponse,
+)
+from openwatch_models.signals import ContestationCreate, ContestationOut, SignalReplayOut
 
 from api.app.adapters.core_adapter import (
     adapter_get_baseline,
@@ -90,61 +145,6 @@ from api.app.adapters.core_adapter import (
     adapter_search_entities as search_entities,
 )
 from api.app.deps import DbSession, Pagination
-from openwatch_models.contestation import Contestation
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# PUBLIC API ROUTER — SPLIT-READY ARCHITECTURE
-# ═══════════════════════════════════════════════════════════════════════════════
-#
-# This router is designed to work in TWO modes:
-#
-# 1. MONOREPO MODE (pre-split)
-#    - Direct database access via SQLAlchemy async
-#    - Uses core_adapter.py for all queries
-#    - All endpoints return full internal data structures
-#
-# 2. SPLIT MODE (post-split in openwatch-public repository)
-#    - HTTP calls to openwatch-core private service via CoreClient
-#    - Uses split_ready_adapter.py for dual-mode access
-#    - All endpoints apply PublicSignalSummary filtering automatically
-#    - Sensitive internal fields are stripped (factors, weights, etc.)
-#
-# MIGRATION PATH POST-SPLIT:
-# - CoreClient is automatically selected when CORE_SERVICE_URL is set
-# - All adapters transparently switch to HTTP mode
-# - PublicSignalSummary and PublicEntitySummary filtering is applied
-# - Endpoint signatures remain UNCHANGED
-#
-# See: api/app/adapters/split_ready_adapter.py for dual-mode patterns
-# See: shared/models/public_filter.py for PublicSignalSummary schema
-#
-# ═══════════════════════════════════════════════════════════════════════════════
-# ── Public API response schemas (API contract — public layer) ─────────────────
-from openwatch_models.coverage_v2 import (
-    CoverageV2AnalyticsResponse,
-    CoverageV2MapResponse,
-    CoverageV2RunDetailResponse,
-    CoverageV2SourcePreviewResponse,
-    CoverageV2SourcesResponse,
-    CoverageV2SummaryResponse,
-    PublicSourcesResponse,
-)
-from openwatch_models.graph import (
-    CaseGraphResponse,
-    EntityPathResponse,
-    NeighborhoodResponse,
-    SignalGraphResponse,
-)
-from openwatch_models.public_filter import to_public_signal
-from openwatch_models.radar import (
-    RadarV2CaseListResponse,
-    RadarV2CasePreviewResponse,
-    RadarV2CoverageResponse,
-    RadarV2SignalListResponse,
-    RadarV2SignalPreviewResponse,
-    RadarV2SummaryResponse,
-)
-from openwatch_models.signals import ContestationCreate, ContestationOut, SignalReplayOut
 
 router = APIRouter()
 

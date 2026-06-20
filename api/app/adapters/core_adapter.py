@@ -10,11 +10,11 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
+from openwatch_config import settings
+from openwatch_models.typology_catalog import get_public_typology, list_public_typologies
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core_client import CoreClient
-from openwatch_config import settings
-from openwatch_models.typology_catalog import get_public_typology, list_public_typologies
 
 
 def _client() -> CoreClient:
@@ -125,9 +125,20 @@ async def adapter_get_case_entities_with_roles(session: AsyncSession, case_id: u
     return await _client().get_case_entities(str(case_id))
 
 
-async def adapter_get_case_graph(session: AsyncSession, case_id: uuid.UUID) -> Any:
+async def adapter_get_case_graph(
+    session: AsyncSession,
+    case_id: uuid.UUID,
+    depth: int = 1,
+    limit: int = 300,
+    focus_signal_id: uuid.UUID | None = None,
+) -> Any:
     _ = session
-    return await _client().get_case_graph(str(case_id))
+    return await _client().get_case_graph(
+        str(case_id),
+        depth=depth,
+        limit=limit,
+        focus_signal_id=str(focus_signal_id) if focus_signal_id is not None else None,
+    )
 
 
 async def adapter_get_signal_by_id(session: AsyncSession, signal_id: uuid.UUID) -> Any:

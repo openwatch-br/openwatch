@@ -6,9 +6,8 @@ import {
   Activity,
   ArrowLeft,
   BookOpen,
+  Clock,
   Eye,
-  FileText,
-  GitMerge,
   Scale,
   Share2,
   Zap,
@@ -68,9 +67,8 @@ export function TabNav() {
   if (caseId) {
     const basePath = `/radar/dossie/${caseId}`;
     const dossierTabs = [
-      { href: basePath, icon: FileText, label: "Visão Geral", tab: null },
-      { href: `${basePath}?tab=rede`, icon: Share2, label: "Rede de Entidades", tab: "rede" },
-      { href: `${basePath}?tab=juridico`, icon: Scale, label: "Hipóteses Jurídicas", tab: "juridico" },
+      { href: basePath, icon: Clock, label: "Cronologia", tab: null },
+      { href: `${basePath}?tab=rede`, icon: Share2, label: "Rede", tab: "rede" },
     ];
 
     return (
@@ -93,12 +91,6 @@ export function TabNav() {
             />
           );
         })}
-        <TabPill
-          href={`/radar/caso/${caseId}`}
-          icon={GitMerge}
-          label="Visão do Caso"
-          active={!!pathname?.startsWith(`/radar/caso/${caseId}`)}
-        />
       </nav>
     );
   }

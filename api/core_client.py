@@ -17,7 +17,6 @@ from __future__ import annotations
 from typing import Any
 
 import httpx
-
 from openwatch_config import settings
 
 
@@ -149,8 +148,19 @@ class CoreClient:
     async def get_case_entities(self, case_id: str) -> Any:
         return await self._get(f"/internal/case/{case_id}/entities")
 
-    async def get_case_graph(self, case_id: str) -> Any:
-        return await self._get(f"/internal/case/{case_id}/graph")
+    async def get_case_graph(
+        self,
+        case_id: str,
+        depth: int = 1,
+        limit: int = 300,
+        focus_signal_id: str | None = None,
+    ) -> Any:
+        return await self._get(
+            f"/internal/case/{case_id}/graph",
+            depth=depth,
+            limit=limit,
+            focus_signal_id=focus_signal_id,
+        )
 
     async def get_case_provenance(self, case_id: str) -> Any:
         return await self._get(f"/internal/case/{case_id}/provenance")
