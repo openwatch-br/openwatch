@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import ClientPage from "@/features/radar/components/RadarDossierPage";
+import ClientPage from "@/features/dossie/components/CaseDossierPage";
 
 export function generateStaticParams() {
   return [{ caseId: "placeholder" }];
