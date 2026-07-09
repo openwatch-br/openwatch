@@ -13,6 +13,19 @@ export function formatBRL(value: number): string {
   }).format(value);
 }
 
+// Compact monetary label for callouts/rows (R$ 2,4 bi · R$ 18,2 mi · R$ 312 mil).
+// Full precision stays with formatBRL — this is for dense dashboard surfaces.
+export function formatBRLCompact(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000)
+    return `R$ ${(value / 1_000_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} bi`;
+  if (abs >= 1_000_000)
+    return `R$ ${(value / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} mi`;
+  if (abs >= 1_000)
+    return `R$ ${(value / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 0 })} mil`;
+  return formatBRL(value);
+}
+
 export function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("pt-BR", {
     day: "2-digit",
