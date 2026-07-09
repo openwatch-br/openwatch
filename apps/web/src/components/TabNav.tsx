@@ -7,8 +7,7 @@ import {
   ArrowLeft,
   BookOpen,
   Clock,
-  Eye,
-  Scale,
+  Home,
   Share2,
   Zap,
 } from "lucide-react";
@@ -21,12 +20,15 @@ type TabItem = {
   exact?: boolean;
 };
 
+// Nexo IA: Hoje · Radar · Rede · Cobertura · Metodologia (every rebrand
+// mockup converges on this 5-item set). Compliance/API-health remain live
+// routes, just not top-nav destinations in the new IA.
 const GLOBAL_TABS: TabItem[] = [
-  { href: "/radar", icon: Zap, label: "Radar", exact: true },
+  { href: "/", icon: Home, label: "Hoje", exact: true },
+  { href: "/radar", icon: Zap, label: "Radar" },
+  { href: "/radar/rede", icon: Share2, label: "Rede" },
   { href: "/coverage", icon: Activity, label: "Cobertura" },
   { href: "/methodology", icon: BookOpen, label: "Metodologia" },
-  { href: "/compliance", icon: Scale, label: "Conformidade" },
-  { href: "/api-health", icon: Eye, label: "API" },
 ];
 
 function TabPill({
@@ -98,9 +100,12 @@ export function TabNav() {
   return (
     <nav className="ow-tabnav" aria-label="Navegação principal">
       {GLOBAL_TABS.map((item) => {
+        // "/radar" must not light up while on the nested "/radar/rede" tab.
         const active = item.exact
           ? pathname === item.href
-          : !!pathname?.startsWith(item.href);
+          : item.href === "/radar"
+            ? !!pathname?.startsWith("/radar") && !pathname.startsWith("/radar/rede")
+            : !!pathname?.startsWith(item.href);
         return (
           <TabPill
             key={item.href}
