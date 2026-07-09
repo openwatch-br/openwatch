@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Search, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 import { OpenWatchLogo } from "./OpenWatchLogo";
+import { ThemeToggle } from "./ThemeToggle";
 
 const MOBILE_NAV = [
   { href: "/radar", label: "Radar de Risco" },
@@ -53,6 +54,9 @@ export function Topbar() {
             ⌘K
           </kbd>
         </span>
+
+        {/* Theme toggle */}
+        <ThemeToggle collapsed className="hidden sm:flex ow-topbar-action" />
 
         {/* Mobile hamburger */}
         <button

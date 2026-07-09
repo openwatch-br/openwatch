@@ -1,18 +1,21 @@
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
 import type { SignalSeverity, CoverageStatus } from "@/lib/types";
+import { SeverityGlyph } from "@/components/SeverityGlyph";
 
-/* ── Severity Badge ─────────────────────────────────────────────── */
+/* ── Severity Badge ─────────────────────────────────────────────────
+   Nexo: glyph (1–4 segments) + subtle fill + label. Severity is never
+   color-only — the segment glyph carries the level on its own. */
 type SeverityBadgeProps = {
   severity: SignalSeverity;
   className?: string;
 };
 
-const severityClass: Record<SignalSeverity, string> = {
-  critical: "ow-badge-critical",
-  high:     "ow-badge-high",
-  medium:   "ow-badge-medium",
-  low:      "ow-badge-low",
+const severityBadgeClass: Record<SignalSeverity, string> = {
+  critical: "ow-sev-badge-critical",
+  high:     "ow-sev-badge-high",
+  medium:   "ow-sev-badge-medium",
+  low:      "ow-sev-badge-low",
 };
 
 const severityLabel: Record<SignalSeverity, string> = {
@@ -24,7 +27,8 @@ const severityLabel: Record<SignalSeverity, string> = {
 
 export function SeverityBadge({ severity, className }: SeverityBadgeProps) {
   return (
-    <span className={clsx("ow-badge", severityClass[severity], className)}>
+    <span className={clsx("ow-sev-badge", severityBadgeClass[severity], className)}>
+      <SeverityGlyph severity={severity} />
       {severityLabel[severity]}
     </span>
   );
@@ -124,39 +128,6 @@ export function EntityTypeBadge({ type, className }: EntityTypeBadgeProps) {
       }}
     >
       {entityLabel[type]}
-    </span>
-  );
-}
-
-/* ── Confidence Badge ───────────────────────────────────────────── */
-interface ConfidenceBadgeProps {
-  score: number;
-  className?: string;
-}
-
-export function ConfidenceBadge({ score, className }: ConfidenceBadgeProps) {
-  const pct = Math.round(score * 100);
-  const variant =
-    pct >= 80 ? "low" :
-    pct >= 60 ? "medium" :
-    pct >= 40 ? "high" : "critical";
-  return (
-    <span className={clsx("ow-badge", `ow-badge-${variant}`, className)}>
-      {pct}% conf.
-    </span>
-  );
-}
-
-/* ── Case Type Badge ────────────────────────────────────────────── */
-interface CaseTypeBadgeProps {
-  type: string;
-  className?: string;
-}
-
-export function CaseTypeBadge({ type, className }: CaseTypeBadgeProps) {
-  return (
-    <span className={clsx("ow-badge ow-badge-info", className)}>
-      {type}
     </span>
   );
 }

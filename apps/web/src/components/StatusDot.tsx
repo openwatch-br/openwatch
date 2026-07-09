@@ -35,7 +35,7 @@ export function StatusDot({ size = "md", status = "ok", className, pulse }: Stat
         "ow-status-dot inline-block rounded-full",
         SIZE[size],
         COLOR[status],
-        pulse && "animate-pulse",
+        pulse && "ow-pulse",
         className
       )}
     />

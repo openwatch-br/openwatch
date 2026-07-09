@@ -8,67 +8,89 @@
 
 @theme {
   /* ── Typography ─────────────────────────────────────────────────── */
-  --font-display: 'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
-  --font-sans:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:    'Geist Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  /* Nexo: Bricolage Grotesque (display) · Instrument Sans (UI/body) ·
+     Red Hat Mono (data). Concrete families are injected per-subtree by
+     next/font (see layout.tsx) which overrides these fallbacks. */
+  --font-display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --font-ui:      'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-sans:    var(--font-ui);   /* compat alias — old .ow-* still say --font-sans */
+  --font-mono:    'Red Hat Mono', ui-monospace, 'SFMono-Regular', monospace;
 
-  /* ── Surfaces (dark-only) ───────────────────────────────────────── */
-  --color-canvas:        #0D0D0F;
-  --color-surface:       #131316;
-  --color-surface-2:     #1A1A1F;
-  --color-surface-3:     #222228;
-  --color-surface-dark:  #09090B;
-  --color-surface-dark-2:#1A1A1F;
+  /* ── Surfaces (dark = default theme; light in [data-theme="light"]) ─ */
+  --color-canvas:        #101214;
+  --color-surface:       #16191C;
+  --color-surface-2:     #1C2024;
+  --color-surface-3:     #23282D;
+  --color-surface-dark:  #0B0C0E;   /* graph canvas — stays dark in both themes */
+  --color-surface-dark-2:#16191C;
 
   /* ── Borders ────────────────────────────────────────────────────── */
-  --color-border:        #26262C;
-  --color-border-strong: #3A3A42;
-  --color-border-focus:  #F5A623;
+  --color-border-subtle: #22272B;
+  --color-border:        #2A3036;
+  --color-border-strong: #3A424A;
+  --color-border-focus:  #5ECFC8;
 
   /* ── Text ───────────────────────────────────────────────────────── */
-  --color-text:          #F4F4F2;
-  --color-text-2:        #A1A1AA;
-  --color-text-3:        #6E6E78;
-  --color-text-inv:      #0D0D0F;
+  --color-text:          #ECEEEF;
+  --color-text-2:        #A6ADB3;
+  --color-text-3:        #757D84;
+  --color-text-inv:      #101214;
 
-  /* ── Brand — Amber (sole decorative accent) ─────────────────────── */
-  --color-brand:         #F5A623;
-  --color-brand-hover:   #FFB94D;
-  --color-brand-pressed: #D98E1B;
-  --color-brand-light:   #FFC56B;
-  --color-brand-tint:    rgba(245, 166, 35, 0.10);
-  --color-brand-text:    #0D0D0F;
-  --color-brand-dim:     rgba(245, 166, 35, 0.16);
-  --color-brand-border:  rgba(245, 166, 35, 0.35);
-  --color-brand-dark:    #B87413;
+  /* ── Brand — Teal (sole decorative accent) ──────────────────────── */
+  --color-brand:         #3DBDB5;
+  --color-brand-hover:   #52CCC4;
+  --color-brand-pressed: #33A49D;
+  --color-brand-light:   #62CFC7;
+  --color-brand-tint:    rgba(61, 189, 181, 0.10);
+  /* NOTE: --color-brand-text is teal-as-accent-TEXT on the page bg (Nexo
+     semantic). For ink ON a brand-filled surface (button labels) use
+     --color-brand-ink. S3 must repoint .ow-btn-primary { color } from
+     --color-brand-text → --color-brand-ink. */
+  --color-brand-text:    #5ECFC8;
+  --color-brand-ink:     #07211F;
+  --color-brand-dim:     rgba(61, 189, 181, 0.16);
+  --color-brand-border:  rgba(61, 189, 181, 0.35);
+  --color-brand-dark:    #2C8781;
 
-  /* ── Severity (functional, dark-retoned) ────────────────────────── */
-  --color-critical:        #FF5C5C;
-  --color-critical-bg:     rgba(255, 92, 92, 0.10);
-  --color-critical-text:   #FF8585;
-  --color-critical-border: rgba(255, 92, 92, 0.30);
+  /* ── Severity (functional — always paired with glyph + label) ───── */
+  --color-critical:        #E07E90;
+  --color-critical-bg:     rgba(224, 126, 144, 0.10);
+  --color-critical-text:   #E895A3;
+  --color-critical-border: rgba(224, 126, 144, 0.30);
 
-  --color-high:            #FF9F45;
-  --color-high-bg:         rgba(255, 159, 69, 0.10);
-  --color-high-text:       #FFB873;
-  --color-high-border:     rgba(255, 159, 69, 0.30);
+  --color-high:            #D57F47;
+  --color-high-bg:         rgba(213, 127, 71, 0.10);
+  --color-high-text:       #E0996B;
+  --color-high-border:     rgba(213, 127, 71, 0.30);
 
-  --color-medium:          #E8C547;
-  --color-medium-bg:       rgba(232, 197, 71, 0.10);
-  --color-medium-text:     #EFD37A;
-  --color-medium-border:   rgba(232, 197, 71, 0.28);
+  --color-medium:          #CFA83E;
+  --color-medium-bg:       rgba(207, 168, 62, 0.10);
+  --color-medium-text:     #DCBB5E;
+  --color-medium-border:   rgba(207, 168, 62, 0.28);
 
-  --color-low:             #4ADE80;
-  --color-low-bg:          rgba(74, 222, 128, 0.10);
-  --color-low-text:        #7CE9A3;
-  --color-low-border:      rgba(74, 222, 128, 0.28);
+  --color-low:             #97A0A8;
+  --color-low-bg:          rgba(151, 160, 168, 0.10);
+  --color-low-text:        #AEB6BC;
+  --color-low-border:      rgba(151, 160, 168, 0.28);
 
   /* ── Semantic ───────────────────────────────────────────────────── */
   --color-info:          #5CA8FF;
   --color-info-bg:       rgba(92, 168, 255, 0.10);
   --color-info-text:     #85BEFF;
-  --color-trust:         #34D3C8;
-  --color-success:       #4ADE80;
+  --color-trust:         #3DBDB5;
+  --color-success:       #57BD82;
+
+  /* ── Confidence — progressive ring (heuristic→partial→high) ─────── */
+  --color-conf-heuristic: #757D84;
+  --color-conf-partial:   #A6ADB3;
+  --color-conf-high:      #3DBDB5;
+
+  /* ── Pipeline / source status (dedicated — no longer alias severity) */
+  --color-status-ok:      #57BD82;
+  --color-status-warning: #CFA83E;
+  --color-status-stale:   #D57F47;
+  --color-status-error:   #DB6C86;
+  --color-status-pending: #757D84;
 
   /* ── Legacy aliases — old names kept rendering during migration ──
      Old: --color-bg, --color-amber*, --color-primary*, etc.
@@ -111,39 +133,39 @@
   --color-warning:             var(--color-medium);
   --color-destructive:         var(--color-critical);
 
-  /* ── Entity / Graph Colors (retoned for dark) ───────────────────── */
-  --color-entity-person:      #A78BFA;
-  --color-entity-company:     #F5A623;
+  /* ── Entity / Graph Colors (mirrors graphStyle.ts — S6) ─────────── */
+  --color-entity-person:      #9D8CFF;
+  --color-entity-company:     #E0A458;   /* decoupled from brand (was amber literal) */
   --color-entity-org:         #5CA8FF;
-  --color-entity-unknown:     #6E6E78;
+  --color-entity-unknown:     #757D84;
 
   /* ── Event Type Colors ───────────────────────────────────────────── */
   --color-event-licitacao:     #5CA8FF;
-  --color-event-contrato:      #A78BFA;
-  --color-event-sancao:        #FF5C5C;
+  --color-event-contrato:      #9D8CFF;
+  --color-event-sancao:        #E07E90;
   --color-event-transferencia: #34D3C8;
-  --color-event-emenda:        #4ADE80;
+  --color-event-emenda:        #57BD82;
 
   /* ── Edge Colors ─────────────────────────────────────────────────── */
   --color-edge-compra:         #5CA8FF;
-  --color-edge-favorecido:     #FF5C5C;
-  --color-edge-copart:         #A78BFA;
-  --color-edge-copartsup:      #B79DFC;
-  --color-edge-coparorg:       #9C7DF5;
-  --color-edge-socio:          #4ADE80;
+  --color-edge-favorecido:     #E07E90;
+  --color-edge-copart:         #9D8CFF;
+  --color-edge-copartsup:      #B0A3FF;
+  --color-edge-coparorg:       #8B7BF0;
+  --color-edge-socio:          #57BD82;
   --color-edge-same-socio:     #34D3C8;
-  --color-edge-address:        #6E6E78;
-  --color-edge-phone:          #6E6E78;
-  --color-edge-acct:           #6E6E78;
-  --color-edge-subsidiary:     #A78BFA;
-  --color-edge-default:        #3A3A42;
+  --color-edge-address:        #757D84;
+  --color-edge-phone:          #757D84;
+  --color-edge-acct:           #757D84;
+  --color-edge-subsidiary:     #9D8CFF;
+  --color-edge-default:        #3A424A;
 
   /* ── Role Badge Colors ───────────────────────────────────────────── */
   --color-role-buyer:          #5CA8FF;
-  --color-role-supplier:       #F5A623;
-  --color-role-winner:         #4ADE80;
-  --color-role-sanctioned:     #FF5C5C;
-  --color-role-beneficiary:    #A78BFA;
+  --color-role-supplier:       #E0A458;
+  --color-role-winner:         #57BD82;
+  --color-role-sanctioned:     #E07E90;
+  --color-role-beneficiary:    #9D8CFF;
 
   /* ── Radii ──────────────────────────────────────────────────────── */
   --radius-xs:   2px;
@@ -154,6 +176,14 @@
   --radius-2xl: 20px;
   --radius-full: 9999px;
 
+  /* ── Motion (theme-invariant) ───────────────────────────────────── */
+  --duration-fast: 120ms;   /* hover, focus, toggles */
+  --duration-base: 200ms;   /* popovers, chips, tabs */
+  --duration-slow: 320ms;   /* drawers, modals, palette */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter:    cubic-bezier(0.1, 0.8, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+
   /* ── Shadows (flat dark — overlays only) ────────────────────────── */
   --shadow-xs:   none;
   --shadow-sm:   none;
@@ -161,9 +191,9 @@
   --shadow-lg:   0 12px 32px rgba(0,0,0,0.50);
   --shadow-xl:   0 20px 48px rgba(0,0,0,0.55);
   --shadow-card: none;
-  --shadow-brand: 0 0 0 1px rgba(245,166,35,0.20);
+  --shadow-brand: 0 0 0 1px rgba(61,189,181,0.20);
   --shadow-amber: var(--shadow-brand);
-  --shadow-glow:  0 0 24px rgba(245,166,35,0.10);
+  --shadow-glow:  0 0 24px rgba(61,189,181,0.10);
 
   /* ── Layout ──────────────────────────────────────────────────────── */
   --sidebar-width: 220px;
@@ -178,17 +208,162 @@
   --content-pad-x:  24px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT THEME — token overrides
+   ─────────────────────────────────────────────────────────────────
+   Architecture note: Tailwind v4 only generates utility classes
+   (bg-canvas, text-muted, border-border, …) for --color-* custom
+   properties declared INSIDE @theme — verified empirically against
+   this repo's @tailwindcss/postcss build (a plain :root/[data-theme]
+   declaration outside @theme silently produces ZERO utilities, which
+   would have broken 700+ existing className call sites). @theme's
+   dark values above already compile to :root scope, so they double
+   as the "dark is default" declaration. This block only needs to
+   override the same custom property names for [data-theme="light"];
+   the generated utilities reference var(--color-x) indirectly, so
+   they resolve dynamically to whichever value cascades here. Values
+   marked (nexo-tokens.css) are copied verbatim from that file's
+   [data-theme="light"] block; values marked (derived) don't exist
+   there and are computed by-analogy (same hue family / relative
+   lightening-darkening ratio as the dark→light delta nexo already
+   defines for sibling tokens) — flagged for design review.
+   Intentionally NOT overridden: --color-surface-dark(-2) — the graph
+   canvas stays dark in both themes per the handoff's own note.
+   ═══════════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  /* Surfaces — nexo-tokens.css */
+  --color-canvas:    #F4F5F5;
+  --color-surface:   #FFFFFF;
+  --color-surface-2: #FAFBFB;
+  --color-surface-3: #F0F2F2;   /* derived — one step past surface-2 */
+
+  /* Borders — nexo-tokens.css */
+  --color-border-subtle: #E8EBEC;
+  --color-border:        #DDE1E3;
+  --color-border-strong: #C3C9CC;
+  --color-border-focus:  #0D7C76;
+
+  /* Text — nexo-tokens.css */
+  --color-text:     #1A1D1F;
+  --color-text-2:   #4B5359;
+  --color-text-3:   #6E777D;
+  --color-text-inv: #F4F5F5;   /* derived — flips vs dark: light-theme brand fill is darker, needs light ink */
+
+  /* Brand — nexo-tokens.css (brand/brand-text/brand-dim/focus), rest derived */
+  --color-brand:         #0D7C76;
+  --color-brand-hover:   #129089;   /* derived */
+  --color-brand-pressed: #095650;   /* derived */
+  --color-brand-light:   #3F9992;   /* derived */
+  --color-brand-tint:    rgba(13, 124, 118, 0.06);   /* derived */
+  --color-brand-text:    #0A6560;
+  --color-brand-ink:     #F4FDFC;   /* derived — near-white; #0D7C76 fill is dark enough that dark ink fails AA */
+  --color-brand-dim:     rgba(13, 124, 118, 0.10);
+  --color-brand-border:  rgba(13, 124, 118, 0.35);   /* derived */
+  --color-brand-dark:    #06423F;   /* derived */
+
+  /* Severity — base colors from nexo-tokens.css; -bg/-text/-border derived (same alpha ratio as dark) */
+  --color-critical:        #B23A52;
+  --color-critical-bg:     rgba(178, 58, 82, 0.08);
+  --color-critical-text:   #B23A52;
+  --color-critical-border: rgba(178, 58, 82, 0.30);
+
+  --color-high:            #A44F1B;
+  --color-high-bg:         rgba(164, 79, 27, 0.08);
+  --color-high-text:       #A44F1B;
+  --color-high-border:     rgba(164, 79, 27, 0.30);
+
+  --color-medium:          #8A6D14;
+  --color-medium-bg:       rgba(138, 109, 20, 0.08);
+  --color-medium-text:     #8A6D14;
+  --color-medium-border:   rgba(138, 109, 20, 0.28);
+
+  --color-low:             #5F6870;
+  --color-low-bg:          rgba(95, 104, 112, 0.08);
+  --color-low-text:        #5F6870;
+  --color-low-border:      rgba(95, 104, 112, 0.28);
+
+  /* Semantic — derived (not in nexo-tokens.css); info/trust follow entity-org/brand hue */
+  --color-info:      #2563C4;
+  --color-info-bg:   rgba(37, 99, 196, 0.08);
+  --color-info-text: #2563C4;
+  --color-trust:     #0F8F86;
+  --color-success:   #257A4A;
+
+  /* Confidence — nexo-tokens.css */
+  --color-conf-heuristic: #6E777D;
+  --color-conf-partial:   #4B5359;
+  --color-conf-high:      #0D7C76;
+
+  /* Status — nexo-tokens.css */
+  --color-status-ok:      #257A4A;
+  --color-status-warning: #8A6D14;
+  --color-status-stale:   #A44F1B;
+  --color-status-error:   #B23A52;
+  --color-status-pending: #6E777D;
+
+  /* Entity — nexo-tokens.css */
+  --color-entity-person:  #6D5BD0;
+  --color-entity-company: #A16A1B;
+  --color-entity-org:     #2563C4;
+  --color-entity-unknown: #6E777D;
+
+  /* Event type — derived, mapped onto matching semantic hue above */
+  --color-event-licitacao:     #2563C4;
+  --color-event-contrato:      #6D5BD0;
+  --color-event-sancao:        #B23A52;
+  --color-event-transferencia: #0F8F86;
+  --color-event-emenda:        #257A4A;
+
+  /* Edge — edge-default from nexo-tokens.css; rest derived from entity/semantic hues */
+  --color-edge-compra:     #2563C4;
+  --color-edge-favorecido: #B23A52;
+  --color-edge-copart:     #6D5BD0;
+  --color-edge-copartsup:  #8672D9;   /* derived — lighter purple variant */
+  --color-edge-coparorg:   #7A63D2;   /* derived — mid purple variant */
+  --color-edge-socio:      #257A4A;
+  --color-edge-same-socio: #0F8F86;
+  --color-edge-address:    #6E777D;
+  --color-edge-phone:      #6E777D;
+  --color-edge-acct:       #6E777D;
+  --color-edge-subsidiary: #6D5BD0;
+  --color-edge-default:    #C3C9CC;
+
+  /* Role badges — derived, mirrors entity/semantic hues */
+  --color-role-buyer:       #2563C4;
+  --color-role-supplier:    #A16A1B;
+  --color-role-winner:      #257A4A;
+  --color-role-sanctioned:  #B23A52;
+  --color-role-beneficiary: #6D5BD0;
+
+  /* Shadows — shadow-1/2/3 from nexo-tokens.css mapped onto existing xs..xl
+     names; light theme lets shadows carry elevation (dark theme uses flat
+     bg-level + border instead, per Fundação §04). */
+  --shadow-xs:    0 1px 2px rgba(26, 29, 31, 0.06);
+  --shadow-sm:    0 1px 2px rgba(26, 29, 31, 0.06);
+  --shadow-md:    0 4px 16px rgba(26, 29, 31, 0.08);
+  --shadow-lg:    0 8px 24px rgba(26, 29, 31, 0.10);   /* derived — interpolated */
+  --shadow-xl:    0 16px 48px rgba(26, 29, 31, 0.14);
+  --shadow-card:  0 1px 2px rgba(26, 29, 31, 0.06);
+  --shadow-brand: 0 0 0 1px rgba(13, 124, 118, 0.20);
+  --shadow-amber: var(--shadow-brand);
+  --shadow-glow:  0 0 24px rgba(13, 124, 118, 0.10);
+}
+
 /* ─── Base Reset ─────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: dark;   /* SSR/no-JS default — matches Nexo's dark-as-primary theme */
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -295,7 +470,12 @@ body {
 
 /* ─── Selection ──────────────────────────────────────────────────── */
 ::selection {
-  background: rgba(245, 166, 35, 0.25);
+  background: rgba(61, 189, 181, 0.28);
+  color: var(--color-text);
+}
+
+[data-theme="light"] ::selection {
+  background: rgba(13, 124, 118, 0.18);   /* derived — lower alpha for legibility on white */
   color: var(--color-text);
 }
 
@@ -370,26 +550,17 @@ body {
     width: 100%;
   }
 
-  /* ── Brand mark ────────────────────────────────────────────────── */
-  .ow-brand-mark {
-    width: 28px;
-    height: 28px;
-    background: var(--color-brand);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    color: var(--color-brand-text);
-  }
-
+  /* ── Wordmark ──────────────────────────────────────────────────────
+     Fundação rule: wordmark always Bricolage 700, mixed case, tight
+     tracking, text color (not brand). The graph-mark logo now renders
+     directly on the page surface (no filled-chip wrapper), so the old
+     .ow-brand-mark chip was removed as dead CSS. */
   .ow-sidebar-wordmark {
-    font-family: var(--font-mono);
-    font-size: 0.875rem;
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
     font-weight: 700;
-    color: var(--color-brand);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
   }
 
   .ow-nav-item {
@@ -723,13 +894,15 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    border-radius: var(--radius-full);  /* pill is the default */
-    font-family: var(--font-mono);
+    gap: 8px;
+    border-radius: var(--radius-md);  /* Nexo: rect (6px) is the default */
+    height: 36px;
+    padding: 0 18px;
+    font-family: var(--font-ui);
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     cursor: pointer;
     border: 1px solid transparent;
     transition: background 160ms ease, border-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 120ms ease;
@@ -740,29 +913,23 @@ body {
   .ow-btn:disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
   .ow-btn:active   { transform: scale(0.98); }
 
-  /* Sizes */
-  .ow-btn-sm { padding: 8px 16px; font-size: 0.8125rem; }
-  .ow-btn-md { padding: 10px 22px; }
-  .ow-btn-lg { padding: 12px 28px; font-size: 1rem; }
+  /* Sizes — explicit heights per Nexo (36px desktop default) */
+  .ow-btn-sm { height: 30px; padding: 0 12px; font-size: 0.8125rem; }
+  .ow-btn-md { height: 36px; padding: 0 18px; }
+  .ow-btn-lg { height: 44px; padding: 0 24px; font-size: 0.9375rem; }
 
-  /* Soft-rect modifier — for in-row, in-table, dense-toolbar use */
-  .ow-btn-rect           { border-radius: var(--radius-md); }
-  .ow-btn-rect.ow-btn-sm { padding: 6px 12px; }
-  .ow-btn-rect.ow-btn-md { padding: 7px 14px; }
-  .ow-btn-rect.ow-btn-lg { padding: 9px 18px; }
+  /* Pill modifier — opt-in rounded shape (rect is now the bare default) */
+  .ow-btn-pill { border-radius: var(--radius-full); }
 
-  /* Icon-only */
-  .ow-btn-icon                       { padding: 9px; border-radius: var(--radius-full); }
-  .ow-btn-icon.ow-btn-sm             { padding: 7px; }
-  .ow-btn-icon.ow-btn-lg             { padding: 11px; }
-  .ow-btn-icon.ow-btn-rect           { border-radius: var(--radius-md); padding: 7px; }
-  .ow-btn-icon.ow-btn-rect.ow-btn-sm { padding: 6px; }
-  .ow-btn-icon.ow-btn-rect.ow-btn-lg { padding: 9px; }
+  /* Icon-only — square, rect by default (add .ow-btn-pill for round) */
+  .ow-btn-icon           { width: 36px; height: 36px; padding: 0; }
+  .ow-btn-icon.ow-btn-sm { width: 30px; height: 30px; }
+  .ow-btn-icon.ow-btn-lg { width: 44px; height: 44px; }
 
-  /* Primary — Court Navy */
+  /* Primary — brand fill, ink label */
   .ow-btn-primary {
     background: var(--color-brand);
-    color: var(--color-brand-text);
+    color: var(--color-brand-ink);
     border-color: var(--color-brand);
   }
   .ow-btn-primary:hover  { background: var(--color-brand-hover);  border-color: var(--color-brand-hover); }
@@ -801,7 +968,7 @@ body {
   .ow-btn-destructive:hover { background: rgba(255, 92, 92, 0.18); border-color: var(--color-critical); }
 
   /* Legacy aliases — amber/signal map to brand */
-  .ow-btn-amber  { background: var(--color-brand); color: var(--color-brand-text); border-color: var(--color-brand); }
+  .ow-btn-amber  { background: var(--color-brand); color: var(--color-brand-ink); border-color: var(--color-brand); }
   .ow-btn-amber:hover  { background: var(--color-brand-hover); border-color: var(--color-brand-hover); }
   .ow-btn-signal { background: var(--color-brand-tint); color: var(--color-brand); border-color: var(--color-brand-light); }
   .ow-btn-signal:hover { background: var(--color-brand-dim); border-color: var(--color-brand); }
@@ -836,11 +1003,129 @@ body {
     border-radius: 50%;
     display: inline-block; flex-shrink: 0;
   }
-  .ow-status-ok      { background: var(--color-low); }
-  .ow-status-warning { background: var(--color-medium); }
-  .ow-status-error   { background: var(--color-critical); }
-  .ow-status-pending { background: var(--color-text-3); }
-  .ow-status-stale   { background: var(--color-high); }
+  .ow-status-ok      { background: var(--color-status-ok); }
+  .ow-status-warning { background: var(--color-status-warning); }
+  .ow-status-error   { background: var(--color-status-error); }
+  .ow-status-pending { background: var(--color-status-pending); }
+  .ow-status-stale   { background: var(--color-status-stale); }
+
+  /* Live/failing pulse — dedicated keyframe (not generic animate-pulse) */
+  .ow-pulse { animation: nexo-pulse 1.6s ease-in-out infinite; }
+
+  /* ── Severity glyph — 1–4 filled segments, carries level without color ─
+     Filled = currentColor (set by badge/severity text color); empty =
+     neutral border. Colorblind-legible standalone or inside a badge. */
+  .ow-sev-glyph { display: inline-flex; align-items: center; gap: 2px; }
+  .ow-sev-glyph-sm { gap: 1.5px; }
+  .ow-sev-seg { width: 3px; height: 10px; border-radius: 1px; background: currentColor; }
+  .ow-sev-glyph-sm .ow-sev-seg { height: 9px; }
+  .ow-sev-seg-empty { background: var(--color-border); }
+
+  /* ── Severity badge — glyph + subtle fill + label (rect, not pill) ── */
+  .ow-sev-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .ow-sev-badge-low      { background: var(--color-low-bg);      color: var(--color-low); }
+  .ow-sev-badge-medium   { background: var(--color-medium-bg);   color: var(--color-medium); }
+  .ow-sev-badge-high     { background: var(--color-high-bg);     color: var(--color-high); }
+  .ow-sev-badge-critical { background: var(--color-critical-bg); color: var(--color-critical); border-color: var(--color-critical-border); font-weight: 700; }
+
+  /* ── Case-type chip — neutral mono, zero semantic color ─────────── */
+  .ow-casetype {
+    display: inline-flex; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    color: var(--color-text-2);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    padding: 3px 9px;
+    white-space: nowrap;
+  }
+
+  /* ── Confidence pill — progressive ring (form, not only color) ───── */
+  .ow-conf {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: var(--radius-full);
+    padding: 3px 11px;
+    font-size: 0.75rem;
+    line-height: 1;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .ow-conf-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  /* heurística — dashed ring */
+  .ow-conf-heuristic       { color: var(--color-conf-heuristic); border: 1px dashed var(--color-conf-heuristic); }
+  .ow-conf-heuristic .ow-conf-dot { border: 1.5px dashed var(--color-conf-heuristic); }
+  /* correlacionada — solid hollow ring */
+  .ow-conf-partial         { color: var(--color-conf-partial); border: 1px solid var(--color-conf-heuristic); }
+  .ow-conf-partial .ow-conf-dot { border: 1.5px solid var(--color-conf-partial); }
+  /* corroborada — half-filled dot */
+  .ow-conf-corroborated    { color: var(--color-text); border: 1px solid var(--color-conf-high); }
+  .ow-conf-corroborated .ow-conf-dot { background: var(--color-conf-high); opacity: 0.55; }
+  /* confirmada — solid filled chip */
+  .ow-conf-confirmed       { color: var(--color-brand-ink); background: var(--color-conf-high); padding: 4px 11px; font-weight: 600; }
+  .ow-conf-confirmed .ow-conf-dot { background: var(--color-brand-ink); }
+
+  /* ── ScoreBar — solid severity fill + threshold ticks + mono value ─ */
+  .ow-scorebar-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+  }
+  .ow-scorebar-label {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+  .ow-scorebar-value {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+  .ow-scorebar-track {
+    position: relative;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: var(--color-border-subtle);
+    margin-top: 12px;
+  }
+  .ow-scorebar-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    border-radius: var(--radius-full);
+    transition: width var(--duration-slow) var(--ease-standard);
+  }
+  .ow-scorebar-tick {
+    position: absolute;
+    top: -3px; bottom: -3px;
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+  .ow-scorebar-scale {
+    display: flex; justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.59375rem;
+    color: var(--color-text-3);
+  }
+  .ow-sev-fill-low      { background: var(--color-low); }
+  .ow-sev-fill-medium   { background: var(--color-medium); }
+  .ow-sev-fill-high     { background: var(--color-high); }
+  .ow-sev-fill-critical { background: var(--color-critical); }
+  .ow-sev-text-low      { color: var(--color-low); }
+  .ow-sev-text-medium   { color: var(--color-medium); }
+  .ow-sev-text-high     { color: var(--color-high); }
+  .ow-sev-text-critical { color: var(--color-critical); }
 
   /* ── Input / Form ──────────────────────────────────────────────── */
   .ow-input {
@@ -1248,6 +1533,9 @@ body {
 /* Pipeline stage animations (used by coverage page via Tailwind arbitrary syntax) */
 @keyframes slide    { 0% { transform: translateX(-150%); } 100% { transform: translateX(150%); } }
 @keyframes progress { 0% { transform: translateX(-200%); } 60% { transform: translateX(100%); } 100% { transform: translateX(300%); } }
+
+/* Live/failing status pulse — StatusDot error state, .ow-pulse */
+@keyframes nexo-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 @layer utilities {
   .animate-fade-in   { animation: ow-fade-in   200ms ease-out both; }
