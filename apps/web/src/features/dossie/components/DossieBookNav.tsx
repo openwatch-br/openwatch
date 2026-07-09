@@ -2,33 +2,35 @@
 
 import { useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDossieBook } from "./DossieBookContext";
 
+/**
+ * Book-wide pager for the dossiê: keyboard ←/→ navigation plus a slim,
+ * centered bottom control that steps through the derived page sequence
+ * (overview → chapters → signals). Logic is unchanged from the original
+ * book-shell concept; only the presentation is Nexo-aligned.
+ */
 export function DossieBookNav() {
   const router = useRouter();
   const { pages, currentIndex } = useDossieBook();
 
   const totalPages = pages.length;
   const hasPrev = currentIndex > 0;
-  const hasNext = currentIndex < totalPages - 1;
+  const hasNext = currentIndex >= 0 && currentIndex < totalPages - 1;
   const currentPage = pages[currentIndex];
 
   const goPrev = useCallback(() => {
-    if (hasPrev) {
-      const prev = pages[currentIndex - 1];
-      if (prev) router.push(prev.href);
-    }
+    const prev = pages[currentIndex - 1];
+    if (hasPrev && prev) router.push(prev.href);
   }, [hasPrev, pages, currentIndex, router]);
 
   const goNext = useCallback(() => {
-    if (hasNext) {
-      const next = pages[currentIndex + 1];
-      if (next) router.push(next.href);
-    }
+    const next = pages[currentIndex + 1];
+    if (hasNext && next) router.push(next.href);
   }, [hasNext, pages, currentIndex, router]);
 
-  // Keyboard navigation
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const tag = (e.target as HTMLElement).tagName;
@@ -45,102 +47,44 @@ export function DossieBookNav() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [goPrev, goNext]);
 
-  if (totalPages === 0 || currentIndex < 0) return null;
-
-  const showDots = totalPages <= 11;
+  if (totalPages <= 1 || currentIndex < 0) return null;
 
   return (
-    <>
-      {/* Desktop side arrows */}
-      <button
-        onClick={goPrev}
-        disabled={!hasPrev}
-        aria-label="Pagina anterior"
-        className={cn(
-          "fixed top-1/2 z-50 hidden -translate-y-1/2 rounded-full border border-border bg-surface-card/90 p-2.5 shadow-lg backdrop-blur transition-all md:flex",
-          hasPrev
-            ? "text-primary hover:bg-surface-subtle hover:border-accent/30"
-            : "cursor-not-allowed text-muted opacity-40",
-        )}
-        style={{ left: "calc(var(--sidebar-width) + 1rem)" }}
-      >
-        <span className="font-sans text-sm leading-none">← Anterior</span>
-      </button>
-
-      <button
-        onClick={goNext}
-        disabled={!hasNext}
-        aria-label="Proxima pagina"
-        className={cn(
-          "fixed right-4 top-1/2 z-50 hidden -translate-y-1/2 rounded-full border border-border bg-surface-card/90 p-2.5 shadow-lg backdrop-blur transition-all md:flex",
-          hasNext
-            ? "text-primary hover:bg-surface-subtle hover:border-accent/30"
-            : "cursor-not-allowed text-muted opacity-40",
-        )}
-      >
-        <span className="font-sans text-sm leading-none">Próximo →</span>
-      </button>
-
-      {/* Bottom bar (always visible) */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 flex h-12 items-center justify-between border-t border-border bg-surface-card/90 px-4 backdrop-blur">
-        {/* Mobile prev */}
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-surface-card/90 py-1.5 pl-1.5 pr-2 shadow-lg backdrop-blur">
         <button
           onClick={goPrev}
           disabled={!hasPrev}
+          aria-label="Página anterior"
           className={cn(
-            "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors md:hidden",
-            hasPrev ? "text-primary hover:bg-surface-subtle" : "text-muted opacity-40",
+            "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+            hasPrev ? "text-primary hover:bg-surface-subtle" : "cursor-not-allowed text-muted opacity-40",
           )}
         >
-          ← Anterior
+          <ChevronLeft className="h-4 w-4" />
         </button>
 
-        {/* Center: label + page indicator + dots */}
-        <div className="flex flex-1 flex-col items-center justify-center gap-0.5 overflow-hidden">
-          <span className="max-w-[240px] truncate text-xs font-medium text-primary sm:max-w-[400px]">
-            {currentPage?.label}
-          </span>
-          <div className="flex items-center gap-2">
-            {showDots && (
-              <div className="flex items-center gap-1">
-                {pages.map((page, i) => (
-                  <button
-                    key={page.href}
-                    onClick={() => router.push(page.href)}
-                    aria-label={`Ir para ${page.label}`}
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      background: i === currentIndex ? "var(--color-accent)" : "var(--color-border)",
-                      flexShrink: 0,
-                      transition: "background 0.2s",
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-            <span
-              className="text-[10px] text-muted bg-surface-subtle px-3 py-1 border border-border tabular-nums"
-              style={{ fontFamily: "var(--font-mono)" }}
-            >
-              {currentIndex + 1} / {totalPages}
-            </span>
-          </div>
-        </div>
+        <span className="hidden max-w-[220px] truncate text-xs text-secondary sm:block">
+          {currentPage?.label}
+        </span>
+        <span
+          className="rounded-full bg-surface-subtle px-2.5 py-0.5 font-mono text-[10px] tabular-nums text-muted"
+        >
+          {currentIndex + 1} / {totalPages}
+        </span>
 
-        {/* Mobile next */}
         <button
           onClick={goNext}
           disabled={!hasNext}
+          aria-label="Próxima página"
           className={cn(
-            "flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors md:hidden",
-            hasNext ? "text-primary hover:bg-surface-subtle" : "text-muted opacity-40",
+            "flex h-7 w-7 items-center justify-center rounded-full transition-colors",
+            hasNext ? "text-primary hover:bg-surface-subtle" : "cursor-not-allowed text-muted opacity-40",
           )}
         >
-          Próximo →
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
-    </>
+    </div>
   );
 }

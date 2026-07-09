@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getDossierTimeline } from "@/lib/api";
 import type {
   DossierTimelineResponse,
   DossieBookContextValue,
@@ -26,6 +29,52 @@ export const DossieBookContext = createContext<DossieBookContextValue>({
 
 export function useDossieBook() {
   return useContext(DossieBookContext);
+}
+
+/**
+ * Loads the dossier timeline once for a case and exposes it (plus the derived
+ * book page-sequence and the active page index) to every dossiê sub-route via
+ * context. Mounted in the case layout so overview, chapter and signal pages
+ * share a single fetch instead of each re-loading the payload. Uses the same
+ * react-query key as `useCaseTimeline`, so requests dedupe.
+ */
+export function DossieBookProvider({
+  caseId,
+  children,
+}: {
+  caseId: string;
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["case-timeline", caseId],
+    queryFn: () => getDossierTimeline(caseId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    enabled: caseId.length > 0,
+  });
+
+  const value = useMemo<DossieBookContextValue>(() => {
+    const pages = data ? buildBookSequence(caseId, data) : [];
+    const normalized = pathname?.replace(/\/+$/, "") ?? "";
+    const currentIndex = pages.findIndex(
+      (p) => p.href.replace(/\/+$/, "") === normalized,
+    );
+    return {
+      data: data ?? null,
+      loading: isLoading,
+      error: error ? "Não foi possível carregar o dossiê." : null,
+      pages,
+      currentIndex,
+    };
+  }, [data, isLoading, error, caseId, pathname]);
+
+  return (
+    <DossieBookContext.Provider value={value}>
+      {children}
+    </DossieBookContext.Provider>
+  );
 }
 
 export function buildBookSequence(
