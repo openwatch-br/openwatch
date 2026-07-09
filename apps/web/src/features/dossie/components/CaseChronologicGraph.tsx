@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useRef, useCallback } from 'react';
 
-import { EDGE_COLORS, NODE_COLOR_FALLBACK, NODE_COLORS } from '@/components/graph/graphStyle';
+import { edgeCssVar, entityCssVar } from '@/components/graph/graphStyle';
 import type { GLink, GNode } from '@/hooks/useCaseGraph';
 import type { DossierTimelineResponse } from '@/lib/types';
 
@@ -332,13 +332,13 @@ export function CaseChronologicGraph({
                     const d = arcPath(src, tgt);
                     if (!d) return null;
                     const isAdj = hoveredNode === src || hoveredNode === tgt;
-                    const edgeColor = EDGE_COLORS[link.type] ?? '#4A4A5A';
+                    const edgeStroke = edgeCssVar(link.type);
                     return (
                         <path
                             key={link.id}
                             d={d}
                             fill='none'
-                            stroke={edgeColor}
+                            stroke={edgeStroke}
                             strokeWidth={isAdj ? 2.5 : 1.5}
                             strokeOpacity={
                                 hoveredNode !== null && !isAdj ? 0.1 : link.isFocused ? 0.9 : 0.55
@@ -356,7 +356,7 @@ export function CaseChronologicGraph({
                     const pos = nodePos[node.id];
                     if (!pos) return null;
                     const r = Math.max(5, Math.min(16, 5 + Math.sqrt(degreeMap[node.id] ?? 0) * 2.2));
-                    const color = NODE_COLORS[node.node_type] ?? NODE_COLOR_FALLBACK;
+                    const color = entityCssVar(node.node_type);
                     const isHovered = hoveredNode === node.id;
                     const isDimmed = hoveredNode !== null && !isHovered;
                     const label = node.label.length > 20 ? node.label.slice(0, 18) + '…' : node.label;
@@ -376,7 +376,7 @@ export function CaseChronologicGraph({
                                 r={r}
                                 fill={color}
                                 fillOpacity={isDimmed ? 0.2 : 1}
-                                stroke={node.isSeed ? '#fff' : 'transparent'}
+                                stroke={node.isSeed ? 'var(--color-text-1)' : 'transparent'}
                                 strokeWidth={node.isSeed ? 2.5 : 0}
                                 style={{ transition: 'fill-opacity 0.12s' }}
                             />
@@ -501,10 +501,14 @@ export function CaseChronologicGraph({
                     color: 'var(--color-text-3)',
                 }}
             >
-                {Object.entries(NODE_COLORS).filter(([k]) => !['empresa', 'org', 'person'].includes(k)).map(([type, color]) => (
+                {([
+                    { type: 'company', label: 'Empresa' },
+                    { type: 'org', label: 'Órgão' },
+                    { type: 'person', label: 'Pessoa' },
+                ] as const).map(({ type, label }) => (
                     <span key={type} style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, display: 'inline-block' }} />
-                        {type === 'company' ? 'Empresa' : type === 'orgao' ? 'Órgão' : type === 'pessoa' ? 'Pessoa' : type}
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: entityCssVar(type), display: 'inline-block' }} />
+                        {label}
                     </span>
                 ))}
                 <span style={{ marginLeft: 'auto' }}>

@@ -1,9 +1,14 @@
 "use client";
 
-// Grafo de vínculos unificado (Sigma.js + graphology, WebGL).
-// Substitui as 3 stacks anteriores (react-force-graph-2d, @xyflow+ELK,
-// SVG custom). Expansão progressiva: clique em nó busca a ego-network
-// paginada e mescla no grafo (useEgoExpansion).
+// Grafo de vínculos unificado (Sigma.js v3 + graphology, WebGL).
+// Expansão progressiva: clique em nó busca a ego-network paginada e
+// mescla no grafo (useEgoExpansion).
+//
+// Estilo/tema/interação centralizados em graphStyle.ts:
+//  - paleta por tipo de entidade (canvas escuro nos dois temas)
+//  - arestas por tipo semântico; societária = tracejada teal ("fio revelador")
+//  - tamanho de nó por grau (contínuo)
+//  - hover/seleção esmaecem a vizinhança fora de foco (nodeReducer/edgeReducer)
 //
 // Importar SEMPRE via next/dynamic com ssr:false — Sigma toca window.
 
@@ -14,7 +19,16 @@ import FA2LayoutSupervisor from "graphology-layout-forceatlas2/worker";
 import Sigma from "sigma";
 
 import type { GraphEdge, GraphNode } from "@/lib/types";
-import { edgeColor, edgeSize, nodeColor } from "./graphStyle";
+import {
+  CANVAS_THEME,
+  edgeAttributes,
+  makeEdgeReducer,
+  makeNodeReducer,
+  nodeAttributes,
+  rendererSettings,
+  type InteractionCtx,
+} from "./graphStyle";
+import { DashedEdgeProgram } from "./dashedEdgeProgram";
 
 export interface SigmaGraphProps {
   nodes: GraphNode[];
@@ -38,28 +52,31 @@ function circularSeed(graph: Graph) {
   });
 }
 
-export function mergeIntoGraph(graph: Graph, nodes: GraphNode[], edges: GraphEdge[], centerNodeId?: string) {
+/** Recalcula o grau de cada nó (usado pela escala de tamanho). */
+function refreshDegrees(graph: Graph) {
+  graph.forEachNode((node) => {
+    graph.setNodeAttribute(node, "degree", graph.degree(node));
+  });
+}
+
+export function mergeIntoGraph(
+  graph: Graph,
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  centerNodeId?: string,
+) {
   for (const n of nodes) {
     if (!graph.hasNode(n.id)) {
-      graph.addNode(n.id, {
-        label: n.label,
-        size: n.id === centerNodeId ? 14 : 7,
-        color: nodeColor(n.node_type),
-        nodeData: n,
-      });
+      graph.addNode(n.id, nodeAttributes(n, centerNodeId));
     }
   }
   for (const e of edges) {
     if (graph.hasNode(e.from_node_id) && graph.hasNode(e.to_node_id) && !graph.hasEdge(e.id)) {
-      graph.addEdgeWithKey(e.id, e.from_node_id, e.to_node_id, {
-        label: e.type,
-        size: edgeSize(e.edge_strength, e.weight),
-        color: edgeColor(e.type),
-        edgeData: e,
-      });
+      graph.addEdgeWithKey(e.id, e.from_node_id, e.to_node_id, edgeAttributes(e));
     }
   }
   circularSeed(graph);
+  refreshDegrees(graph);
 }
 
 export default function SigmaGraph({
@@ -74,6 +91,10 @@ export default function SigmaGraph({
   const sigmaRef = useRef<Sigma | null>(null);
   const layoutRef = useRef<FA2LayoutSupervisor | null>(null);
   const graph = useMemo(() => new Graph({ multi: true }), []);
+  // Estado de interação mutável — lido pelos reducers a cada refresh.
+  const ctxRef = useRef<InteractionCtx>({});
+  const hoveredRef = useRef<string | null>(null);
+  const selectedRef = useRef<string | null>(null);
 
   // Sync incoming data into the graphology instance
   useEffect(() => {
@@ -96,22 +117,59 @@ export default function SigmaGraph({
     const supervisor = new FA2LayoutSupervisor(graph, { settings });
     layoutRef.current = supervisor;
 
+    const ctx = ctxRef.current;
+    const baseEdgeReducer = makeEdgeReducer(CANVAS_THEME, ctx);
+
     const renderer = new Sigma(graph, container, {
-      renderEdgeLabels: false,
-      labelColor: { color: "#B9B9C0" },
-      labelFont: "Inter, sans-serif",
-      labelSize: 11,
-      defaultEdgeType: "line",
-      zIndex: true,
+      ...rendererSettings(CANVAS_THEME),
+      edgeProgramClasses: { dashed: DashedEdgeProgram },
+      nodeReducer: makeNodeReducer(CANVAS_THEME, ctx),
+      edgeReducer: (edge, data) => {
+        const [s, t] = graph.extremities(edge);
+        return baseEdgeReducer(edge, data, s, t);
+      },
     });
     sigmaRef.current = renderer;
 
+    // Vizinhança em foco = nó + vizinhos diretos (para esmaecer o resto).
+    const focusOn = (node: string | null) => {
+      if (!node || !graph.hasNode(node)) {
+        ctx.focusNeighborhood = undefined;
+        return;
+      }
+      const set = new Set<string>([node]);
+      graph.forEachNeighbor(node, (nb) => set.add(nb));
+      ctx.focusNeighborhood = set;
+    };
+
+    const syncFocus = () => {
+      const focus = selectedRef.current ?? hoveredRef.current;
+      ctx.selectedNode = selectedRef.current ?? undefined;
+      ctx.hoveredNode = hoveredRef.current ?? undefined;
+      focusOn(focus);
+      renderer.refresh();
+    };
+
+    renderer.on("enterNode", ({ node }) => {
+      hoveredRef.current = node;
+      container.style.cursor = "pointer";
+      syncFocus();
+    });
+    renderer.on("leaveNode", () => {
+      hoveredRef.current = null;
+      container.style.cursor = "default";
+      syncFocus();
+    });
     renderer.on("clickNode", ({ node }) => {
+      selectedRef.current = selectedRef.current === node ? null : node;
+      syncFocus();
       const data = graph.getNodeAttribute(node, "nodeData") as GraphNode | undefined;
       if (data && onNodeClick) onNodeClick(data);
     });
-    renderer.on("enterNode", () => { container.style.cursor = "pointer"; });
-    renderer.on("leaveNode", () => { container.style.cursor = "default"; });
+    renderer.on("clickStage", () => {
+      selectedRef.current = null;
+      syncFocus();
+    });
 
     supervisor.start();
     const t = setTimeout(() => supervisor.stop(), layoutSeconds * 1000);
@@ -131,7 +189,7 @@ export default function SigmaGraph({
     <div
       ref={containerRef}
       className={className ?? "h-full w-full"}
-      style={{ minHeight: 320 }}
+      style={{ minHeight: 320, background: "var(--color-surface-dark)" }}
     />
   );
 }

@@ -19,9 +19,12 @@ interface EntityEgoGraphProps {
   entityId: string;
   className?: string;
   height?: number;
+  /** Full-bleed: fill the parent (h-full) instead of a fixed pixel height. */
+  fill?: boolean;
 }
 
-function EntityEgoGraphInner({ entityId, className, height = 420 }: EntityEgoGraphProps) {
+function EntityEgoGraphInner({ entityId, className, height = 420, fill = false }: EntityEgoGraphProps) {
+  const boxHeight: number | string = fill ? "100%" : height;
   const ego = useEgoExpansion(entityId);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
 
@@ -42,7 +45,7 @@ function EntityEgoGraphInner({ entityId, className, height = 420 }: EntityEgoGra
     return (
       <div
         className={cn("flex items-center justify-center bg-surface-card", className)}
-        style={{ height }}
+        style={{ height: boxHeight }}
       >
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
@@ -56,7 +59,7 @@ function EntityEgoGraphInner({ entityId, className, height = 420 }: EntityEgoGra
     return (
       <div
         className={cn("flex items-center justify-center bg-surface-card", className)}
-        style={{ height }}
+        style={{ height: boxHeight }}
       >
         <p className="text-sm text-severity-critical">{ego.error}</p>
       </div>
@@ -80,7 +83,7 @@ function EntityEgoGraphInner({ entityId, className, height = 420 }: EntityEgoGra
   }
 
   return (
-    <div className={cn("relative bg-surface-card", className)} style={{ height }}>
+    <div className={cn("relative bg-surface-card", className)} style={{ height: boxHeight }}>
       <SigmaGraph
         nodes={ego.nodes}
         edges={ego.edges}

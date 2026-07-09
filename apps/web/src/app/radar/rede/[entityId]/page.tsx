@@ -6,9 +6,11 @@ export function generateStaticParams() {
 }
 
 export default function Page(_: { params: Promise<Record<string, string>> }) {
+  // Full-bleed canvas — EntityNetworkPage owns the layout (floating islands
+  // over the graph), so we skip the ow-content width/padding constraints.
   return (
-    <div className="ow-mode-editorial ow-content">
-      <Suspense><ClientPage /></Suspense>
-    </div>
+    <Suspense>
+      <ClientPage />
+    </Suspense>
   );
 }

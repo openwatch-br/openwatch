@@ -13,7 +13,19 @@ import forceAtlas2 from 'graphology-layout-forceatlas2';
 import FA2LayoutSupervisor from 'graphology-layout-forceatlas2/worker';
 import Sigma from 'sigma';
 
-import { NODE_COLOR_FALLBACK, edgeColor, edgeSize, nodeColor } from '@/components/graph/graphStyle';
+import {
+    CANVAS_THEME,
+    EDGE_STYLE,
+    GRAPH_THEME,
+    entityCssVar,
+    makeEdgeReducer,
+    makeNodeReducer,
+    mapEdgeType,
+    nodeSizeForDegree,
+    normalizeEntityType,
+    type InteractionCtx,
+} from '@/components/graph/graphStyle';
+import { DashedEdgeProgram } from '@/components/graph/dashedEdgeProgram';
 import { useCaseGraph } from '@/hooks/useCaseGraph';
 import type { DossierTimelineResponse } from '@/lib/types';
 import { CaseChronologicGraph } from './CaseChronologicGraph';
@@ -26,14 +38,6 @@ const TYPE_LABEL: Record<string, string> = {
     org: 'Órgão',
     orgao: 'Órgão',
 };
-
-/** Degree → node radius (sqrt scale keeps hubs readable without dominating). */
-function nodeSizeForDegree(degree: number, isSeed: boolean): number {
-    const base = 6 + Math.sqrt(degree) * 3;
-    return Math.min(24, isSeed ? Math.max(base, 11) : base);
-}
-
-const FADED = '#26262C';
 
 type ViewMode = 'ego' | 'chrono' | 'force';
 
@@ -75,13 +79,18 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         const container = containerRef.current;
         if (!container) return undefined;
 
+        const theme = GRAPH_THEME[CANVAS_THEME];
         const graph = new Graph({ multi: true });
         const order = graphData.nodes.length;
         graphData.nodes.forEach((n, i) => {
+            const entityType = normalizeEntityType(n.node_type);
             graph.addNode(n.id, {
                 label: n.label,
+                entityType,
+                isEgo: n.isSeed,
+                degree: degreeMap[n.id] ?? 0,
                 size: nodeSizeForDegree(degreeMap[n.id] ?? 0, n.isSeed),
-                color: nodeColor(n.node_type),
+                color: theme.node[entityType],
                 nodeType: n.node_type,
                 x: Math.cos((2 * Math.PI * i) / Math.max(order, 1)),
                 y: Math.sin((2 * Math.PI * i) / Math.max(order, 1)),
@@ -89,10 +98,13 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         });
         for (const l of graphData.links) {
             if (graph.hasNode(l.source) && graph.hasNode(l.target) && !graph.hasEdge(l.id)) {
+                const semantic = mapEdgeType(l.type);
                 graph.addEdgeWithKey(l.id, l.source, l.target, {
                     label: l.type,
-                    size: edgeSize(l.edge_strength ?? 'weak', l.weight),
-                    color: edgeColor(l.type),
+                    semantic,
+                    size: EDGE_STYLE[semantic].size,
+                    type: EDGE_STYLE[semantic].dashed ? 'dashed' : 'line',
+                    color: theme.edge[semantic],
                 });
             }
         }
@@ -100,52 +112,61 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
         const settings = forceAtlas2.inferSettings(graph);
         const supervisor = new FA2LayoutSupervisor(graph, { settings });
 
+        // Interação partilhada (hover/seleção esmaece a vizinhança fora de foco).
+        const ctx: InteractionCtx = {};
+        const baseNodeReducer = makeNodeReducer(CANVAS_THEME, ctx);
+        const baseEdgeReducer = makeEdgeReducer(CANVAS_THEME, ctx);
+
         const renderer = new Sigma(graph, container, {
             allowInvalidContainer: true,
             renderEdgeLabels: false,
-            labelColor: { color: '#B9B9C0' },
-            labelFont: 'Inter, sans-serif',
+            labelColor: { color: theme.label },
+            labelFont: 'Red Hat Mono, ui-monospace, monospace',
             labelSize: 11,
             defaultEdgeType: 'line',
+            edgeProgramClasses: { dashed: DashedEdgeProgram },
             zIndex: true,
+            // Reducers partilhados + filtro por tipo de entidade (legenda).
             nodeReducer: (node, data) => {
-                const res = { ...data };
                 if (hiddenTypesRef.current.has(String(data['nodeType']))) {
-                    res.hidden = true;
-                    return res;
+                    return { ...data, hidden: true };
                 }
-                const hovered = hoveredRef.current;
-                if (hovered && node !== hovered && !graph.areNeighbors(node, hovered)) {
-                    res.color = FADED;
-                    res.label = '';
-                }
-                return res;
+                return baseNodeReducer(node, data);
             },
             edgeReducer: (edge, data) => {
-                const res = { ...data };
-                const hovered = hoveredRef.current;
-                if (hovered && !graph.extremities(edge).includes(hovered)) {
-                    res.hidden = true;
-                }
                 const [s, t] = graph.extremities(edge);
                 if (
                     hiddenTypesRef.current.has(String(graph.getNodeAttribute(s, 'nodeType'))) ||
                     hiddenTypesRef.current.has(String(graph.getNodeAttribute(t, 'nodeType')))
                 ) {
-                    res.hidden = true;
+                    return { ...data, hidden: true };
                 }
-                return res;
+                return baseEdgeReducer(edge, data, s, t);
             },
         });
         sigmaRef.current = renderer;
 
+        const focusOn = (node: string | null): void => {
+            if (!node || !graph.hasNode(node)) {
+                ctx.focusNeighborhood = undefined;
+                return;
+            }
+            const set = new Set<string>([node]);
+            graph.forEachNeighbor(node, nb => set.add(nb));
+            ctx.focusNeighborhood = set;
+        };
+
         renderer.on('enterNode', ({ node }) => {
             hoveredRef.current = node;
+            ctx.hoveredNode = node;
+            focusOn(node);
             container.style.cursor = 'grab';
             renderer.refresh();
         });
         renderer.on('leaveNode', () => {
             hoveredRef.current = null;
+            ctx.hoveredNode = undefined;
+            focusOn(null);
             container.style.cursor = 'default';
             renderer.refresh();
         });
@@ -246,9 +267,9 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                                 padding: '4px 12px',
                                 background:
                                     viewMode === tab.id
-                                        ? 'var(--color-accent, #5CA8FF)'
+                                        ? 'var(--color-brand)'
                                         : 'var(--color-surface)',
-                                color: viewMode === tab.id ? '#fff' : 'var(--color-text-2)',
+                                color: viewMode === tab.id ? 'var(--color-brand-ink)' : 'var(--color-text-2)',
                                 border: 'none',
                                 cursor: 'pointer',
                                 borderRight:
@@ -290,7 +311,7 @@ export const CaseNetworkGraph: React.FC<CaseNetworkGraphProps> = ({ caseId, focu
                                         width: 10,
                                         height: 10,
                                         borderRadius: '50%',
-                                        background: nodeColor(type) ?? NODE_COLOR_FALLBACK,
+                                        background: entityCssVar(type),
                                     }}
                                 />
                                 {TYPE_LABEL[type] ?? type}

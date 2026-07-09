@@ -1,75 +1,20 @@
 "use client";
 
+// Perfil de entidade (Nexo) — o ego-graph é a peça central. Trilho de
+// identidade compacto à esquerda; grafo + sinais vinculados à direita.
+// A composição vive em sub-componentes (entity/*) para evitar god-file.
+
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Building2,
-  User,
-  Landmark,
-  Users,
-  Radar,
-  Activity,
-  ChevronRight,
-  Shield,
-  FileText,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { getEntity, getGraphNeighborhood, getRadarV2Signals } from "@/lib/api";
-import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import { EmptyState } from "@/components/EmptyState";
 import { DetailSkeleton } from "@/components/Skeleton";
-import { normalizeUnknownDisplay } from "@/lib/utils";
-import type { SignalSeverity, EntityDetail, NeighborhoodResponse, RadarV2SignalItem } from "@/lib/types";
-import { ConfidenceBadge } from "@/components/ConfidenceBadge";
-import { EntityTypeBadge } from "@/components/Badge";
-import { LinkButton } from "@/components/Button";
-import { clsx } from "clsx";
-
-const TYPE_ICONS = {
-  pessoa_fisica: User,
-  person: User,
-  pessoa_juridica: Building2,
-  company: Building2,
-  orgao: Landmark,
-  org: Landmark,
-} as const;
-
-const SEVERITY_ORDER: SignalSeverity[] = ["critical", "high", "medium", "low"];
-
-const SEVERITY_LABELS: Record<SignalSeverity, string> = {
-  critical: "CRÍTICO",
-  high: "ALTO",
-  medium: "MÉDIO",
-  low: "BAIXO",
-};
-
-const NODE_TYPE_ICONS = {
-  person: User,
-  company: Building2,
-  org: Landmark,
-} as const;
-
-const NODE_TYPE_LABELS: Record<string, string> = {
-  person: "Pessoa",
-  company: "Empresa",
-  org: "Órgão",
-};
-
-type Tab = "sinais" | "contratos" | "vinculos" | "sancoes";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "sinais", label: "Sinais" },
-  { id: "contratos", label: "Contratos" },
-  { id: "vinculos", label: "Vínculos" },
-  { id: "sancoes", label: "Sanções" },
-];
-
-function normalizeEntityType(type: string): "person" | "company" | "org" | "unknown" {
-  if (type === "pessoa_fisica" || type === "person") return "person";
-  if (type === "pessoa_juridica" || type === "company") return "company";
-  if (type === "orgao" || type === "org") return "org";
-  return "unknown";
-}
+import type { EntityDetail, NeighborhoodResponse, RadarV2SignalItem } from "@/lib/types";
+import { EntityIdentityRail } from "./entity/EntityIdentityRail";
+import { EntityEgoSection } from "./entity/EntityEgoSection";
+import { EntitySignalsList } from "./entity/EntitySignalsList";
 
 export default function EntityDetailPage() {
   const params = useParams<{ id: string }>();
@@ -79,7 +24,6 @@ export default function EntityDetailPage() {
   const [neighborhood, setNeighborhood] = useState<NeighborhoodResponse | null>(null);
   const [signals, setSignals] = useState<RadarV2SignalItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("sinais");
 
   useEffect(() => {
     if (!id) return;
@@ -90,7 +34,6 @@ export default function EntityDetailPage() {
         const e = await getEntity(id);
         if (cancelled) return;
         setEntity(e);
-        // Load signals and neighborhood in parallel once entity is known
         const [sigs, nbh] = await Promise.allSettled([
           getRadarV2Signals({ orgao_id: e.id, limit: 20 }),
           getGraphNeighborhood(id),
@@ -106,7 +49,9 @@ export default function EntityDetailPage() {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (error === "not_found") {
@@ -136,34 +81,18 @@ export default function EntityDetailPage() {
     );
   }
 
-  const TypeIcon = TYPE_ICONS[entity.type as keyof typeof TYPE_ICONS] ?? Building2;
-  // Sanitize identifiers: skip null/empty/internal-only keys
-  const identifierEntries = Object.entries(entity.identifiers).filter(
-    ([, v]) => v != null && v !== "" && v !== "unknown",
-  );
-  const coParticipants = neighborhood?.co_participants ?? [];
-  // Precompute per-severity counts from loaded signals
-  const signalCountBySeverity = SEVERITY_ORDER.reduce<Record<SignalSeverity, number>>(
-    (acc, sev) => {
-      acc[sev] = (signals ?? []).filter((s) => s.severity === sev).length;
-      return acc;
-    },
-    { critical: 0, high: 0, medium: 0, low: 0 },
-  );
-  const eventCount = neighborhood?.diagnostics?.entity_event_count ?? 0;
-  const normalizedType = normalizeEntityType(entity.type);
-  const sector = entity.attrs?.sector as string | undefined;
+  const connectionCount = neighborhood?.co_participants?.length ?? 0;
+  const stats = [
+    { value: signals === null ? "…" : String(signals.length), label: "sinais vinculados" },
+    { value: String(connectionCount), label: "conexões diretas" },
+  ];
 
   return (
-    <div className="animate-slide-up mx-auto max-w-6xl px-4 py-6 sm:px-6 space-y-5">
-
-      {/* ── Breadcrumb ─────────────────────────────────────────────── */}
-      <nav className="flex items-center gap-1.5" style={{ color: "var(--color-text-3)" }}>
-        <Link
-          href="/radar"
-          className="text-mono-xs transition-colors hover:text-[var(--color-amber-text)]"
-        >
-          Radar
+    <div className="animate-slide-up mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      {/* Breadcrumb */}
+      <nav className="mb-5 flex items-center gap-1.5" style={{ color: "var(--color-text-3)" }}>
+        <Link href="/radar/rede" className="text-mono-xs transition-colors hover:text-[var(--color-brand-text)]">
+          Rede
         </Link>
         <ChevronRight className="h-3 w-3 opacity-40" />
         <span className="text-mono-xs max-w-xs truncate" style={{ color: "var(--color-text-2)" }}>
@@ -171,400 +100,13 @@ export default function EntityDetailPage() {
         </span>
       </nav>
 
-      {/* ── Entity Header Card ─────────────────────────────────────── */}
-      <div className="ow-card">
+      {/* Ego-graph centred profile */}
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
+        <EntityIdentityRail entity={entity} stats={stats} />
 
-        {/* Identity row */}
-        <div className="ow-card-section flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-4">
-            <div
-              className="shrink-0 flex items-center justify-center h-16 w-16"
-              style={{
-                background: "var(--color-amber-dim)",
-                border: "1px solid var(--color-amber-border)",
-              }}
-            >
-              <TypeIcon className="h-8 w-8" style={{ color: "var(--color-amber)" }} />
-            </div>
-
-            <div className="min-w-0 space-y-2">
-              <h1 className="text-display-lg leading-tight" style={{ color: "var(--color-text)" }}>
-                {entity.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <EntityTypeBadge type={normalizedType} />
-                {sector && (
-                  <span className="ow-badge ow-badge-neutral">{sector}</span>
-                )}
-              </div>
-              {identifierEntries.length > 0 && (
-                <div className="flex flex-wrap gap-x-6 gap-y-1.5 pt-1">
-                  {identifierEntries.map(([key, value]) => (
-                    <div key={key} className="flex items-baseline gap-1.5">
-                      <span
-                        className="text-mono-xs uppercase tracking-widest"
-                        style={{ color: "var(--color-text-3)" }}
-                      >
-                        {key}
-                      </span>
-                      <span className="ow-id">{normalizeUnknownDisplay(value)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {entity.cluster_id && (
-                <p className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
-                  cluster{" "}
-                  <span className="ow-id">#{entity.cluster_id.slice(0, 8)}</span>
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="shrink-0">
-            <LinkButton href={`/radar?entity=${entity.id}`} variant="amber" size="sm">
-                <Radar className="mr-1.5 h-3.5 w-3.5" />
-                Ver no Radar
-              </LinkButton>
-          </div>
-        </div>
-
-        {entity.cluster_confidence != null && (
-          <div className="ow-card-section">
-            <ConfidenceBadge score={entity.cluster_confidence} />
-          </div>
-        )}
-
-        {/* Risk Metrics Strip */}
-        <div
-          className="grid grid-cols-2 gap-px sm:grid-cols-4"
-          style={{ background: "var(--color-border)" }}
-        >
-          {SEVERITY_ORDER.map((sev) => {
-            const count = signalCountBySeverity[sev];
-            return (
-              <div
-                key={sev}
-                className="flex flex-col gap-1.5 px-5 py-4"
-                style={{ background: "var(--color-surface)" }}
-              >
-                <span
-                  className="text-mono-xs uppercase tracking-widest"
-                  style={{ color: `var(--color-${sev}-text)` }}
-                >
-                  {SEVERITY_LABELS[sev]}
-                </span>
-                <span
-                  className="text-display-md tabular-nums leading-none"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    color: signals === null ? "var(--color-text-3)" : `var(--color-${sev})`,
-                  }}
-                >
-                  {signals === null ? "…" : count}
-                </span>
-                <span className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
-                  {signals === null ? "carregando" : count === 1 ? "sinal" : "sinais"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Stats footer strip */}
-        <div
-          className="ow-card-section flex flex-wrap items-center gap-3 text-mono-xs"
-          style={{ color: "var(--color-text-3)", background: "var(--color-surface-2)" }}
-        >
-          <span>
-            <span
-              className="tabular-nums font-semibold"
-              style={{ color: "var(--color-text-2)" }}
-            >
-              {eventCount}
-            </span>{" "}
-            evento{eventCount !== 1 ? "s" : ""}
-          </span>
-          <span aria-hidden>·</span>
-          <span>
-            <span
-              className="tabular-nums font-semibold"
-              style={{ color: "var(--color-text-2)" }}
-            >
-              {coParticipants.length}
-            </span>{" "}
-            conexã{coParticipants.length !== 1 ? "ões" : "o"}
-          </span>
-          {entity.aliases.length > 0 && (
-            <>
-              <span aria-hidden>·</span>
-              <span>
-                <span
-                  className="tabular-nums font-semibold"
-                  style={{ color: "var(--color-text-2)" }}
-                >
-                  {entity.aliases.length}
-                </span>{" "}
-                alias
-              </span>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* ── Tabs ───────────────────────────────────────────────────── */}
-      <div className="ow-card">
-
-        {/* Tab nav */}
-        <div
-          className="flex overflow-x-auto border-b"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={clsx(
-                  "shrink-0 border-b-2 px-5 py-3.5 text-mono-sm transition-colors -mb-px",
-                  isActive
-                    ? "border-[var(--color-amber)]"
-                    : "border-transparent hover:border-[var(--color-border-strong)]",
-                )}
-                style={{
-                  color: isActive
-                    ? "var(--color-amber-text)"
-                    : "var(--color-text-3)",
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Tab panels */}
-        <div className="ow-card-section">
-
-          {/* ── Sinais ── */}
-          {activeTab === "sinais" && (
-            <div className="space-y-4">
-              {signals === null && (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="h-14 animate-pulse rounded"
-                      style={{ background: "var(--color-surface-2)" }}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {signals !== null && signals.length === 0 && (
-                <EmptyState
-                  icon={Activity}
-                  title="Nenhum sinal detectado"
-                  description="Esta entidade não possui sinais de risco identificados nos dados analisados."
-                />
-              )}
-
-              {signals !== null && signals.length > 0 && (
-                <div className="ow-table-wrapper">
-                  <table className="ow-table">
-                    <thead>
-                      <tr>
-                        <th>Tipologia</th>
-                        <th>Severidade</th>
-                        <th>Período</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {signals.map((sig) => (
-                        <tr key={sig.id} className="ow-card-hover">
-                          <td>
-                            <div>
-                              <p
-                                className="font-medium"
-                                style={{ color: "var(--color-text)" }}
-                              >
-                                {sig.typology_name}
-                              </p>
-                              <p
-                                className="text-mono-xs"
-                                style={{ color: "var(--color-text-3)" }}
-                              >
-                                {sig.typology_code}
-                              </p>
-                            </div>
-                          </td>
-                          <td>
-                            <span
-                              className={`ow-badge ow-badge-${sig.severity}`}
-                            >
-                              {SEVERITY_LABELS[sig.severity]}
-                            </span>
-                          </td>
-                          <td
-                            className="text-mono-xs"
-                            style={{ color: "var(--color-text-3)" }}
-                          >
-                            {sig.period_start
-                              ? new Date(sig.period_start).toLocaleDateString("pt-BR")
-                              : "—"}
-                          </td>
-                          <td className="text-right">
-                            <Link
-                              href={`/signal/${sig.id}`}
-                              className="text-mono-xs transition-colors hover:text-[var(--color-amber-text)]"
-                              style={{ color: "var(--color-text-3)" }}
-                            >
-                              Detalhes →
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              <div>
-                <LinkButton href={`/radar?entity=${entity.id}`} variant="ghost" size="sm">
-                  <Radar className="mr-1.5 h-3.5 w-3.5" />
-                  Acessar Radar desta Entidade
-                </LinkButton>
-              </div>
-            </div>
-          )}
-
-          {/* ── Contratos ── */}
-          {activeTab === "contratos" && (
-            <EmptyState
-              icon={FileText}
-              title="Sem contratos vinculados"
-              description="Nenhum contrato foi associado diretamente a esta entidade nos dados disponíveis."
-            />
-          )}
-
-          {/* ── Vínculos ── */}
-          {activeTab === "vinculos" && (
-            <div className="space-y-6">
-              <div>
-                <p
-                  className="mb-3 text-mono-xs uppercase tracking-widest"
-                  style={{ color: "var(--color-text-3)" }}
-                >
-                  Rede de Relacionamentos
-                </p>
-                <div
-                  className="overflow-hidden"
-                  style={{ border: "1px solid var(--color-border)" }}
-                >
-                  <EntityEgoGraph entityId={entity.id} />
-                </div>
-              </div>
-
-              <div>
-                <p
-                  className="mb-3 text-mono-xs uppercase tracking-widest"
-                  style={{ color: "var(--color-text-3)" }}
-                >
-                  Co-Participantes ({coParticipants.length})
-                </p>
-
-                {coParticipants.length === 0 ? (
-                  <EmptyState
-                    icon={Users}
-                    title="Nenhum co-participante encontrado"
-                    description="Esta entidade não possui co-participantes identificados nos eventos analisados."
-                  />
-                ) : (
-                  <div className="ow-table-wrapper">
-                    <table className="ow-table">
-                      <thead>
-                        <tr>
-                          <th>Nome</th>
-                          <th>Tipo</th>
-                          <th className="text-right">Eventos em comum</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {coParticipants.map((cp) => {
-                          const CpIcon =
-                            NODE_TYPE_ICONS[cp.node_type as keyof typeof NODE_TYPE_ICONS] ?? User;
-                          return (
-                            <tr key={cp.entity_id} className="ow-card-hover">
-                              <td>
-                                <Link
-                                  href={`/entity/${cp.entity_id}`}
-                                  className="font-medium transition-colors hover:text-[var(--color-amber-text)]"
-                                  style={{ color: "var(--color-text)" }}
-                                >
-                                  {cp.label}
-                                </Link>
-                              </td>
-                              <td>
-                                <span
-                                  className="flex items-center gap-1.5 text-mono-sm"
-                                  style={{ color: "var(--color-text-2)" }}
-                                >
-                                  <CpIcon className="h-3.5 w-3.5" />
-                                  {NODE_TYPE_LABELS[cp.node_type] ??
-                                    normalizeUnknownDisplay(cp.node_type)}
-                                </span>
-                              </td>
-                              <td
-                                className="text-right tabular-nums"
-                                style={{
-                                  fontFamily: "var(--font-mono)",
-                                  color: "var(--color-text-2)",
-                                }}
-                              >
-                                {cp.shared_events}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-
-              {entity.aliases.length > 0 && (
-                <div>
-                  <p
-                    className="mb-3 text-mono-xs uppercase tracking-widest"
-                    style={{ color: "var(--color-text-3)" }}
-                  >
-                    Nomes Alternativos ({entity.aliases.length})
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {entity.aliases.map((alias, i) => (
-                      <span key={i} className="ow-badge ow-badge-neutral">
-                        {alias.value}
-                        <span className="ml-1.5 opacity-50">
-                          {normalizeUnknownDisplay(alias.type)}
-                        </span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Sanções ── */}
-          {activeTab === "sancoes" && (
-            <EmptyState
-              icon={Shield}
-              title="Sem sanções registradas"
-              description="Nenhuma sanção foi identificada para esta entidade nos dados disponíveis."
-            />
-          )}
+        <div className="flex min-w-0 flex-col gap-6">
+          <EntityEgoSection entityId={entity.id} />
+          <EntitySignalsList signals={signals} />
         </div>
       </div>
     </div>

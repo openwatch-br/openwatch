@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useCallback } from 'react';
 
-import { NODE_COLOR_FALLBACK, edgeColor, nodeColor } from '@/components/graph/graphStyle';
+import { edgeCssVar, entityCssVar, isOwnershipEdge } from '@/components/graph/graphStyle';
 import type { GLink, GNode } from '@/hooks/useCaseGraph';
 
 const SVG_W = 900;
@@ -257,7 +257,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                     width: 8,
                                     height: 8,
                                     borderRadius: '50%',
-                                    background: edgeColor(type),
+                                    background: edgeCssVar(type),
                                     flexShrink: 0,
                                 }}
                             />
@@ -277,7 +277,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                             marginLeft: 'auto',
                             fontSize: 11,
                             fontFamily: 'var(--font-mono)',
-                            color: 'var(--color-accent, #5CA8FF)',
+                            color: 'var(--color-brand)',
                             background: 'transparent',
                             border: 'none',
                             cursor: 'pointer',
@@ -322,7 +322,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                 key={l.id + '-rr'}
                                 d={`M ${sp.cx} ${sp.cy} Q ${qx} ${qy} ${tp.cx} ${tp.cy}`}
                                 fill='none'
-                                stroke={edgeColor(l.type)}
+                                stroke={edgeCssVar(l.type)}
                                 strokeWidth={isHigh ? 1.8 : 0.9}
                                 strokeDasharray='4 3'
                                 opacity={hoveredId && !isHigh ? 0.07 : 0.38}
@@ -344,8 +344,9 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                 y1={CY}
                                 x2={rp.cx}
                                 y2={rp.cy}
-                                stroke={edgeColor(l.type)}
+                                stroke={edgeCssVar(l.type)}
                                 strokeWidth={isHigh ? 2.5 : strong ? 1.8 : 1.1}
+                                strokeDasharray={isOwnershipEdge(l.type) ? '5 4' : undefined}
                                 opacity={hoveredId && !isHigh ? 0.05 : 0.5}
                             />
                         );
@@ -354,7 +355,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                     {/* Ring nodes */}
                     {ringPositions.map(({ node, cx, cy, r }) => {
                         const isHigh = hoveredId === node.id;
-                        const color = nodeColor(node.node_type) ?? NODE_COLOR_FALLBACK;
+                        const color = entityCssVar(node.node_type);
                         // Always show labels; shorten to fit ring density
                         const maxChars = ringNodes.length <= 8 ? 22 : ringNodes.length <= 14 ? 14 : 10;
                         const label =
@@ -374,7 +375,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                     cy={cy}
                                     r={isHigh ? r + 3 : r}
                                     fill={color}
-                                    stroke={isHigh ? '#fff' : 'transparent'}
+                                    stroke={isHigh ? 'var(--color-text-1)' : 'transparent'}
                                     strokeWidth={2}
                                     opacity={hoveredId && !isHigh ? 0.28 : 0.88}
                                 />
@@ -420,22 +421,22 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                             cx={CX}
                             cy={CY}
                             r={EGO_R + 10}
-                            fill={nodeColor(egoNode.node_type) ?? NODE_COLOR_FALLBACK}
+                            fill={entityCssVar(egoNode.node_type)}
                             opacity={0.1}
                         />
                         <circle
                             cx={CX}
                             cy={CY}
                             r={EGO_R + 5}
-                            fill={nodeColor(egoNode.node_type) ?? NODE_COLOR_FALLBACK}
+                            fill={entityCssVar(egoNode.node_type)}
                             opacity={0.16}
                         />
                         <circle
                             cx={CX}
                             cy={CY}
                             r={EGO_R}
-                            fill={nodeColor(egoNode.node_type) ?? NODE_COLOR_FALLBACK}
-                            stroke='#fff'
+                            fill={entityCssVar(egoNode.node_type)}
+                            stroke='var(--color-text-1)'
                             strokeWidth={2.5}
                         />
                         <text
@@ -491,7 +492,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                         width={TW}
                                         height={TH}
                                         rx={6}
-                                        fill='#16161E'
+                                        fill='var(--color-surface-2)'
                                         stroke='var(--color-border)'
                                         strokeWidth={1}
                                     />
@@ -500,7 +501,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                         y={ty + 22}
                                         fontSize={11}
                                         fontFamily='var(--font-mono)'
-                                        fill='#E8E8F0'
+                                        fill='var(--color-text-1)'
                                         fontWeight='600'
                                     >
                                         {shortLabel}
@@ -510,7 +511,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                         y={ty + 38}
                                         fontSize={10}
                                         fontFamily='var(--font-mono)'
-                                        fill='#8888A0'
+                                        fill='var(--color-text-3)'
                                     >
                                         {typeLabel}
                                     </text>
@@ -519,7 +520,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                         y={ty + 54}
                                         fontSize={10}
                                         fontFamily='var(--font-mono)'
-                                        fill='#8888A0'
+                                        fill='var(--color-text-3)'
                                     >
                                         {tooltip.degree} conexões totais
                                     </text>
@@ -529,7 +530,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                             y={ty + 68}
                                             fontSize={9}
                                             fontFamily='var(--font-mono)'
-                                            fill='#5CA8FF'
+                                            fill='var(--color-brand)'
                                         >
                                             clique para explorar →
                                         </text>
@@ -571,7 +572,7 @@ export function CaseEgoGraph({ nodes, links, degreeMap }: CaseEgoGraphProps): Re
                                 width: 10,
                                 height: 10,
                                 borderRadius: '50%',
-                                background: nodeColor(type) ?? NODE_COLOR_FALLBACK,
+                                background: entityCssVar(type),
                                 display: 'inline-block',
                                 flexShrink: 0,
                             }}
