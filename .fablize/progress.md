@@ -74,7 +74,7 @@ slow (~30–60s) — kick early. 30-min ceiling → hand off with restart prompt
 - [x] C4 dossiê accordion+merge + contestation removal — committed. Verified:
       2-signal case shows aria-expanded [true,false] (first open, rest collapsed);
       no "Contestar"; /sinal/[id] redirects to /radar/dossie/[id]#sig-[id].
-- [~] C5 redesigns — 3 Sonnet agents running (methodology #8, api-health #9,
+- [x] C5 redesigns — committed (26c0b68). Methodology, API status, coverage all
       coverage #10), typecheck-only gate, disjoint surfaces. Orchestrator runs
       the single build + browser verification after they land.
       Methodology brief also folds in the contestation copy fix (#4): rename
