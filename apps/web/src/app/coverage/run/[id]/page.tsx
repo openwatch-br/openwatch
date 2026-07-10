@@ -7,7 +7,7 @@ export function generateStaticParams() {
 
 export default function Page(_: { params: Promise<Record<string, string>> }) {
   return (
-    <div className="ow-mode-editorial ow-content">
+    <div className="ow-mode-working ow-content">
       <Suspense><ClientPage /></Suspense>
     </div>
   );

@@ -1,24 +1,16 @@
 /**
  * operatorApiClient.ts
  *
- * HTTP client for /internal/* operator endpoints.
- * This file is intentionally separate from publicApiClient.ts to make
- * the security boundary explicit: internal endpoints require
- * Authorization: Bearer <INTERNAL_API_KEY> and must never be exposed to
- * public users.
+ * Client for operator pipeline actions. Calls same-origin Next.js Route
+ * Handlers under /api/internal/* (see src/app/api/internal/**\/route.ts),
+ * which proxy to the gateway's /internal/* endpoints and attach the
+ * server-only INTERNAL_API_KEY. The browser never sees that key.
  *
  * IMPORTANT: Only import this file in operator/admin pages or components.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const INTERNAL_API_KEY =
-  process.env.NEXT_PUBLIC_INTERNAL_API_KEY ??
-  "dev-internal-key-change-in-production";
-
-const authHeader = { Authorization: `Bearer ${INTERNAL_API_KEY}` } as const;
-
 async function fetchJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { headers: authHeader });
+  const res = await fetch(path);
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -26,10 +18,7 @@ async function fetchJSON<T>(path: string): Promise<T> {
 }
 
 async function postJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: authHeader,
-  });
+  const res = await fetch(path, { method: "POST" });
   if (!res.ok) {
     throw new Error(`API error: ${res.status} ${res.statusText}`);
   }
@@ -77,23 +66,23 @@ export interface DispatchNextResponse {
 // ── Operator functions ────────────────────────────────────────────────────────
 
 export function getPipelineStatus(): Promise<PipelineStatusResponse> {
-  return fetchJSON("/internal/pipeline/status");
+  return fetchJSON("/api/internal/pipeline/status");
 }
 
 export function triggerFullPipeline(): Promise<PipelineDispatchResponse> {
-  return postJSON("/internal/pipeline/full");
+  return postJSON("/api/internal/pipeline/full");
 }
 
 export function requestYieldConnector(
   connector: string,
 ): Promise<{ status: string; jobs_signaled: number }> {
-  return postJSON(`/internal/ingest/${connector}/yield`);
+  return postJSON(`/api/internal/ingest/${encodeURIComponent(connector)}/yield`);
 }
 
 export function getPipelineCapacity(): Promise<PipelineCapacity> {
-  return fetchJSON("/internal/pipeline/capacity");
+  return fetchJSON("/api/internal/pipeline/capacity");
 }
 
 export function dispatchNextPending(): Promise<DispatchNextResponse> {
-  return postJSON("/internal/pipeline/dispatch-next");
+  return postJSON("/api/internal/pipeline/dispatch-next");
 }
