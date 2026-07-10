@@ -615,6 +615,66 @@ body {
     .ow-fetch-bar::after { animation: none; width: 100%; opacity: 0.5; }
   }
 
+  /* ── Laudo accordion (dossiê achado, read inline) ──────────────── */
+  .ow-laudo {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-card, var(--color-surface));
+    overflow: hidden;
+    transition: border-color 120ms;
+  }
+  .ow-laudo:hover { border-color: var(--color-border-strong); }
+  .ow-laudo:has(.ow-laudo-body) { border-color: var(--color-border-strong); }
+
+  .ow-laudo-head {
+    display: flex; align-items: flex-start; gap: 14px;
+    width: 100%; text-align: left;
+    padding: 18px 20px;
+    background: none; border: none; cursor: pointer;
+  }
+  .ow-laudo-num {
+    font-size: 13px; font-weight: 600;
+    color: var(--color-text-3);
+    padding-top: 2px; min-width: 20px;
+  }
+  .ow-laudo-body {
+    padding: 4px 20px 22px calc(20px + 20px + 14px);
+    display: flex; flex-direction: column; gap: 22px;
+    border-top: 1px solid var(--color-border-subtle);
+    margin-top: -1px;
+  }
+  @media (max-width: 640px) {
+    .ow-laudo-body { padding-left: 20px; }
+  }
+  .ow-laudo-field { display: flex; flex-direction: column; }
+  .ow-laudo-eyebrow {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--color-text-2);
+  }
+  .ow-laudo-eyebrow-plain { color: var(--color-text-3); }
+  .ow-laudo-step {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 5px;
+    font-size: 10px; font-weight: 700;
+    color: var(--color-brand-ink, #07211F);
+  }
+  .ow-laudo-step[data-tone="show"]     { background: var(--color-brand); }
+  .ow-laudo-step[data-tone="indicate"] { background: var(--color-medium); }
+  .ow-laudo-step[data-tone="deny"]     { background: var(--color-critical); color: #fff; }
+  .ow-laudo-text {
+    font-size: 14.5px; line-height: 1.65;
+    color: var(--color-text-2);
+    max-width: 62ch;
+  }
+  .ow-laudo-score {
+    border-top: 1px solid var(--color-border-subtle);
+    padding-top: 16px;
+  }
+
   /* ── Filter chips (squared, terminal-style) ────────────────────── */
   .ow-chip {
     display: inline-flex; align-items: center; gap: 8px;

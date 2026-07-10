@@ -1,14 +1,15 @@
-import { Suspense } from "react";
-import ClientPage from "@/features/investigation/components/SinalPage";
+"use client";
 
-export function generateStaticParams() {
-  return [{ caseId: "placeholder", signalId: "placeholder" }];
-}
+import { useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 
-export default function Page(_: { params: Promise<Record<string, string>> }) {
-  return (
-    <div className="mx-auto w-full max-w-[1320px]">
-      <Suspense><ClientPage /></Suspense>
-    </div>
-  );
+// The signal laudo now lives inline on the dossiê (as an achado accordion).
+// Old /sinal/[signalId] links redirect to the matching accordion.
+export default function Page() {
+  const { caseId, signalId } = useParams<{ caseId: string; signalId: string }>();
+  const router = useRouter();
+  useEffect(() => {
+    router.replace(`/radar/dossie/${caseId}#sig-${signalId}`);
+  }, [caseId, signalId, router]);
+  return null;
 }

@@ -1,29 +1,31 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
-import { useParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 
 import { useDossieBook } from "./DossieBookContext";
 import { DossieReadingShell, type TocEntry } from "./DossieReadingShell";
 import { DossieMasthead } from "./DossieMasthead";
-import { DossieLede, DossieCallout, DossiePullQuote } from "./DossieProse";
-import { DossieChapterSection } from "./DossieChapterSection";
+import { DossieLede, DossieCallout } from "./DossieProse";
+import { DossieHeading } from "./DossieProse";
+import { DossieSignalAccordion } from "./DossieSignalAccordion";
 import { DossieEmbedFrame } from "./DossieEmbed";
 import { CaseTimeline } from "./CaseTimeline";
 import {
-  buildDossieChapters,
   estimateReadingMinutes,
   countSources,
-  pickFinding,
 } from "../helpers/dossieContent";
 import { buildCaseTimeline } from "../helpers/buildCaseTimeline";
 import { formatBRL, formatDate } from "@/lib/utils";
+import type { SignalSeverity, TimelineSignalDTO } from "@/lib/types";
+
+const SEV_RANK: Record<SignalSeverity, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+function confidenceOf(s: TimelineSignalDTO): number {
+  return s.signal_confidence_score ?? (s.confidence != null ? s.confidence * 100 : 0);
+}
 
 export default function CaseDossierPage() {
-  const params = useParams();
-  const caseId = String(params["caseId"] ?? "");
   const { data, loading, error } = useDossieBook();
 
   const timelineModel = useMemo(
@@ -53,15 +55,18 @@ export default function CaseDossierPage() {
   }
 
   const { case: caseInfo } = data;
-  const chapters = buildDossieChapters(data);
-  const finding = pickFinding(data);
+
+  // Signals, worst first, each paired with the events that back it.
+  const signals = [...data.signals].sort(
+    (a, b) => SEV_RANK[a.severity] - SEV_RANK[b.severity] || confidenceOf(b) - confidenceOf(a),
+  );
+  const eventsForSignal = (signalId: string) =>
+    data.events.filter((e) => e.signals.some((s) => s.id === signalId));
 
   const totalValue = data.events.reduce((sum, e) => sum + (e.value_brl ?? 0), 0);
   const primaryOrg = data.entities.find((e) => e.type === "org");
   const generated =
-    typeof caseInfo.attrs.created_at === "string"
-      ? formatDate(caseInfo.attrs.created_at)
-      : null;
+    typeof caseInfo.attrs.created_at === "string" ? formatDate(caseInfo.attrs.created_at) : null;
 
   const meta: string[] = [];
   if (primaryOrg) meta.push(primaryOrg.name);
@@ -71,13 +76,13 @@ export default function CaseDossierPage() {
 
   const toc: TocEntry[] = [
     { kind: "anchor", num: "—", label: "Folha de rosto", id: "folha-de-rosto" },
-    ...chapters.map(
-      (c): TocEntry => ({
+    ...signals.map(
+      (s, i): TocEntry => ({
         kind: "anchor",
-        num: c.num,
-        label: c.title,
-        id: c.typologyCode,
-        severity: c.severity,
+        num: String(i + 1).padStart(2, "0"),
+        label: s.title,
+        id: `sig-${s.id}`,
+        severity: s.severity,
       }),
     ),
     { kind: "anchor", num: "—", label: "Linha do tempo", id: "cronologia" },
@@ -91,15 +96,6 @@ export default function CaseDossierPage() {
     sourceCount: countSources(data),
     readingMinutes: estimateReadingMinutes(data),
   };
-
-  const timelineEmbed =
-    timelineModel && timelineModel.items.length > 0 ? (
-      <div id="cronologia" className="scroll-mt-[calc(var(--shell-height)+16px)]">
-        <DossieEmbedFrame label="Linha do tempo dos eventos">
-          <CaseTimeline model={timelineModel} />
-        </DossieEmbedFrame>
-      </div>
-    ) : null;
 
   return (
     <DossieReadingShell meta={railMeta} toc={toc} scrollSpy>
@@ -115,33 +111,35 @@ export default function CaseDossierPage() {
 
       <DossieCallout>
         Este dossiê reúne <strong className="font-semibold text-primary">indícios</strong> derivados
-        de dados públicos. Não constitui acusação nem prova de irregularidade — cada afirmação pode
-        ser auditada até a fonte primária no laudo de cada sinal.
+        de dados públicos. Não constitui acusação nem prova de irregularidade — cada achado abaixo pode
+        ser aberto e auditado até a fonte primária.
       </DossieCallout>
 
       {caseInfo.summary && <DossieLede>{caseInfo.summary}</DossieLede>}
 
-      {chapters.map((chapter, i) => (
-        <div key={chapter.typologyCode}>
-          <DossieChapterSection chapter={chapter} caseId={caseId} />
-          {i === 0 && timelineEmbed}
+      <section>
+        <DossieHeading id="achados">
+          {signals.length === 1 ? "O achado" : `Os ${signals.length} achados`}
+        </DossieHeading>
+        <div className="flex flex-col gap-3">
+          {signals.map((sig, i) => (
+            <DossieSignalAccordion
+              key={sig.id}
+              signal={sig}
+              events={eventsForSignal(sig.id)}
+              index={i}
+              defaultOpen={i === 0}
+            />
+          ))}
         </div>
-      ))}
+      </section>
 
-      {/* Embed not yet placed inline (few/no chapters) falls to the end. */}
-      {chapters.length < 1 && timelineEmbed}
-
-      {finding && (
-        <DossiePullQuote
-          severity={finding.signal.severity}
-          source={
-            <Link href={`/radar/dossie/${caseId}/sinal/${finding.signal.id}`} className="hover:text-secondary">
-              → ver laudo do sinal · {finding.typologyCode}
-            </Link>
-          }
-        >
-          {finding.signal.summary ?? finding.signal.title}
-        </DossiePullQuote>
+      {timelineModel && timelineModel.items.length > 0 && (
+        <div id="cronologia" className="scroll-mt-[calc(var(--shell-height)+16px)]">
+          <DossieEmbedFrame label="Linha do tempo dos eventos">
+            <CaseTimeline model={timelineModel} />
+          </DossieEmbedFrame>
+        </div>
       )}
     </DossieReadingShell>
   );

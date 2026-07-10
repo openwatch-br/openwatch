@@ -55,12 +55,6 @@ export function SignalDetailHeader({
               Ver dossiê ›
             </Link>
           )}
-          <a
-            href="#contestar"
-            className="rounded-md border border-critical-border px-3 py-1.5 text-[13px] font-semibold text-critical transition-colors hover:bg-critical-bg"
-          >
-            Contestar
-          </a>
         </div>
       </div>
 

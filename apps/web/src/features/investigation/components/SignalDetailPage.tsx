@@ -22,7 +22,6 @@ import type {
 import { SinalProvenance } from "./SinalProvenance";
 import { SinalEvidenceList } from "./SinalEvidenceList";
 import { InferencePanel } from "./InferencePanel";
-import { ContestationForm } from "@/components/ContestationForm";
 
 import { SignalDetailHeader } from "./signal-detail/SignalDetailHeader";
 import { SignalFinding } from "./signal-detail/SignalFinding";
@@ -146,10 +145,6 @@ export default function SignalDetailPage() {
           <SignalFactors signal={signal} />
           <SignalEntities entities={entities} signalId={signalId} />
           <SignalRelated legalBasis={legalBasis} relatedSignals={relatedSignals} />
-
-          <section id="contestar" className="scroll-mt-[calc(var(--shell-height)+16px)]">
-            <ContestationForm signalId={signalId} />
-          </section>
         </div>
 
         {/* ── inference panel ────────────────────────────────────── */}
