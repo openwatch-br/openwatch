@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getRadarV2Cases, getRadarV2CaseBatchPreview } from "@/lib/api";
+import { getRadarV2Cases } from "@/lib/api";
 import type { SignalSeverity } from "@/lib/types";
 import { SeverityGlyph } from "@/components/SeverityGlyph";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
@@ -27,7 +27,6 @@ interface CaseRow {
   id: string;
   code: string | null;
   title: string;
-  org: string | null;
   entities: string;
   severity: SignalSeverity;
   confidence: number | null;
@@ -35,6 +34,9 @@ interface CaseRow {
   updated: string;
 }
 
+// Confidence and value come straight off the case-list item (the list
+// endpoint aggregates avg_confidence and sums event values) — one request,
+// no per-case preview fan-out, so filter changes resolve fast.
 async function loadCases(filters: RadarFilters, offset: number): Promise<{ rows: CaseRow[]; total: number }> {
   const { items, total } = await getRadarV2Cases({
     offset,
@@ -47,24 +49,16 @@ async function loadCases(filters: RadarFilters, offset: number): Promise<{ rows:
     sphere: filters.sphere || undefined,
   });
 
-  const previews = await getRadarV2CaseBatchPreview(items.map((c) => c.id));
-  const rows = items.map((c): CaseRow => {
-    const p = previews[c.id];
-    const confidences = (p?.top_signals ?? [])
-      .map((s) => s.confidence)
-      .filter((n): n is number => typeof n === "number");
-    return {
-      id: c.id,
-      code: c.typology_codes?.[0] ?? null,
-      title: c.title,
-      org: p?.case.entity_names?.[0] ?? null,
-      entities: c.entity_count > 0 ? `${c.entity_count} entidades` : "—",
-      severity: c.severity,
-      confidence: confidences.length ? Math.max(...confidences) : null,
-      value: p?.case.total_value_brl ?? null,
-      updated: relativeTime(c.created_at),
-    };
-  });
+  const rows = items.map((c): CaseRow => ({
+    id: c.id,
+    code: c.typology_codes?.[0] ?? null,
+    title: c.title,
+    entities: c.entity_count > 0 ? `${c.entity_count} envolvidos` : "—",
+    severity: c.severity,
+    confidence: c.avg_confidence ?? null,
+    value: c.total_value_brl ?? null,
+    updated: relativeTime(c.created_at),
+  }));
   return { rows, total };
 }
 
@@ -75,7 +69,7 @@ interface RadarCasesTableProps {
 
 export function RadarCasesTable({ filters, confBand }: RadarCasesTableProps) {
   const [offset, setOffset] = useState(0);
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, isFetching } = useQuery({
     queryKey: ["radar-cases", filters, offset],
     queryFn: () => loadCases(filters, offset),
     placeholderData: keepPreviousData,
@@ -93,12 +87,22 @@ export function RadarCasesTable({ filters, confBand }: RadarCasesTableProps) {
   }
 
   const rows = (data?.rows ?? []).filter((r) => confInBand(r.confidence, confBand));
-  if (rows.length === 0) {
-    return <EmptyState title="Nenhum caso" description="Nenhum caso corresponde a este recorte." />;
-  }
 
   return (
-    <div>
+    <div className="relative">
+      {/* Refetch feedback — old rows stay put (keepPreviousData), dimmed +
+          a progress hairline, so a filter change never looks like a freeze. */}
+      {isFetching && (
+        <>
+          <div className="ow-fetch-bar" aria-hidden="true" />
+          <span className="sr-only" role="status">Atualizando casos…</span>
+        </>
+      )}
+      <div className={isFetching ? "pointer-events-none opacity-60 transition-opacity" : "transition-opacity"}>
+      {rows.length === 0 ? (
+        <EmptyState title="Nenhum caso" description="Nenhum caso corresponde a este recorte." />
+      ) : (
+      <>
       <RadarTableHeader columns={CASE_COLUMNS} grid={CASES_GRID} />
       {rows.map((r) => (
         <Link
@@ -112,7 +116,7 @@ export function RadarCasesTable({ filters, confBand }: RadarCasesTableProps) {
           <div className="min-w-0 sm:py-2 sm:pr-3">
             <div className="truncate text-[13.5px] font-semibold text-[var(--color-text)]">{r.title}</div>
             <div className="mt-0.5 truncate font-mono text-[10.5px] text-[var(--color-text-3)]">
-              {r.org ? `${r.org} · ` : ""}{r.entities}
+              {r.entities}
             </div>
           </div>
           <span
@@ -132,6 +136,9 @@ export function RadarCasesTable({ filters, confBand }: RadarCasesTableProps) {
         </Link>
       ))}
       <RadarPagination offset={offset} pageSize={PAGE_SIZE} total={data?.total ?? 0} onOffset={setOffset} />
+      </>
+      )}
+      </div>
     </div>
   );
 }

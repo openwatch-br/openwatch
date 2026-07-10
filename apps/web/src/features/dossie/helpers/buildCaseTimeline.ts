@@ -8,7 +8,7 @@ import type {
 
 /** A person/org participating in a timeline event, resolved against the case roster. */
 export interface TimelineParticipant {
-    /** Entity UUID — links to /radar/rede/[entityId]. */
+    /** Entity UUID — links to /entity/[entityId]. */
     entityId: string;
     /** Display name (resolved from the entity roster). */
     name: string;

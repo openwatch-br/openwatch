@@ -5,13 +5,38 @@
 // métrica. Extraído de EntityDetailPage para evitar god-file.
 
 import { Building2, Landmark, User } from "lucide-react";
-import { entityCssVar, normalizeEntityType } from "@/components/graph/graphStyle";
 import { EntityTypeBadge } from "@/components/Badge";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { normalizeUnknownDisplay } from "@/lib/utils";
 import type { EntityDetail } from "@/lib/types";
 
 const TYPE_ICONS = { person: User, company: Building2, org: Landmark, unknown: Building2 } as const;
+
+type EntityKind = "person" | "company" | "org" | "unknown";
+
+function normalizeEntityType(raw: string | undefined | null): EntityKind {
+  switch ((raw ?? "").toLowerCase()) {
+    case "person":
+    case "pessoa":
+    case "pessoa_fisica":
+      return "person";
+    case "company":
+    case "empresa":
+    case "pessoa_juridica":
+      return "company";
+    case "org":
+    case "orgao":
+    case "órgão":
+    case "organization":
+      return "org";
+    default:
+      return "unknown";
+  }
+}
+
+function entityCssVar(rawType: string | undefined | null): string {
+  return `var(--color-entity-${normalizeEntityType(rawType)})`;
+}
 
 interface StatCard {
   value: string;

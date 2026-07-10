@@ -3,23 +3,29 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Menu, X } from "lucide-react";
+import { Activity, BookOpen, Home, Menu, X, Zap } from "lucide-react";
 import { clsx } from "clsx";
 import { OpenWatchLogo } from "./OpenWatchLogo";
-import { ThemeToggle } from "./ThemeToggle";
 
-const MOBILE_NAV = [
-  { href: "/radar", label: "Radar de Risco" },
-  { href: "/coverage", label: "Cobertura" },
-  { href: "/methodology", label: "Metodologia" },
-  { href: "/compliance", label: "Conformidade" },
-  { href: "/api-health", label: "Status da API" },
+type NavItem = {
+  href: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  label: string;
+  exact?: boolean;
+};
+
+// Single global nav — sits inline with the logo (one bar, no second row).
+const NAV: NavItem[] = [
+  { href: "/", icon: Home, label: "Hoje", exact: true },
+  { href: "/radar", icon: Zap, label: "Radar" },
+  { href: "/coverage", icon: Activity, label: "Cobertura" },
+  { href: "/methodology", icon: BookOpen, label: "Metodologia" },
 ];
 
-function triggerCmdK() {
-  document.dispatchEvent(
-    new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
-  );
+function isActive(pathname: string | null, item: NavItem): boolean {
+  if (!pathname) return false;
+  const p = pathname !== "/" ? pathname.replace(/\/+$/, "") : pathname;
+  return item.exact ? p === item.href : p.startsWith(item.href);
 }
 
 export function Topbar() {
@@ -29,36 +35,28 @@ export function Topbar() {
   return (
     <>
       <header className="ow-topbar">
-        {/* Brand */}
         <Link href="/" className="ow-topbar-logo" aria-label="OpenWatch — página inicial">
           <OpenWatchLogo size="sm" />
         </Link>
 
-        {/* Global search — opens command palette */}
-        <button
-          type="button"
-          className="ow-topbar-search hidden sm:flex"
-          onClick={triggerCmdK}
-          aria-label="Buscar empresa, pessoa, órgão ou CNPJ (⌘K)"
-        >
-          <Search size={14} aria-hidden="true" className="text-[var(--color-text-3)]" />
-          <span className="ow-topbar-search-placeholder">
-            empresa, pessoa, órgão ou CNPJ…
-          </span>
-        </button>
+        {/* Inline nav — same row as the logo */}
+        <nav className="ow-topbar-nav" aria-label="Navegação principal">
+          {NAV.map((item) => {
+            const active = isActive(pathname, item);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={clsx("ow-tab-pill", active && "active")}
+                aria-current={active ? "page" : undefined}
+              >
+                <item.icon size={14} aria-hidden="true" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
-        {/* Hint */}
-        <span className="hidden lg:flex items-center gap-2 pr-4 pl-2 text-xs text-[var(--color-text-3)] whitespace-nowrap">
-          Enter busca
-          <kbd className="text-[0.625rem] opacity-50 border border-[var(--color-border)] rounded px-1 py-0.5 font-mono">
-            ⌘K
-          </kbd>
-        </span>
-
-        {/* Theme toggle */}
-        <ThemeToggle collapsed className="hidden sm:flex ow-topbar-action" />
-
-        {/* Mobile hamburger */}
         <button
           className="ow-topbar-action sm:hidden ml-auto"
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -70,7 +68,6 @@ export function Topbar() {
         </button>
       </header>
 
-      {/* Mobile drawer */}
       {mobileOpen && (
         <>
           <div
@@ -84,30 +81,16 @@ export function Topbar() {
             aria-label="Menu móvel"
           >
             <div className="p-3 flex flex-col gap-1">
-              {/* Search */}
-              <button
-                className="ow-nav-item"
-                onClick={() => { setMobileOpen(false); triggerCmdK(); }}
-              >
-                <Search size={14} className="ow-nav-icon" />
-                Buscar...
-                <kbd className="ml-auto text-[0.625rem] opacity-40 border border-[var(--color-border)] rounded px-1 py-0.5 font-mono">
-                  ⌘K
-                </kbd>
-              </button>
-
-              <div className="h-px bg-[var(--color-border)] my-1" />
-
-              {MOBILE_NAV.map((item) => {
-                const isActive =
-                  pathname === item.href || pathname?.startsWith(item.href + "/");
+              {NAV.map((item) => {
+                const active = isActive(pathname, item);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={clsx("ow-nav-item", isActive && "active")}
+                    className={clsx("ow-nav-item", active && "active")}
                     onClick={() => setMobileOpen(false)}
                   >
+                    <item.icon size={14} className="ow-nav-icon" />
                     {item.label}
                   </Link>
                 );

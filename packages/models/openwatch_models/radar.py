@@ -68,6 +68,8 @@ class RadarV2CaseListItemOut(BaseModel):
     typology_codes: list[str] = Field(default_factory=list)
     period_start: datetime | None = None
     period_end: datetime | None = None
+    total_value_brl: float = 0.0
+    avg_confidence: int | None = None
     created_at: datetime
 
 

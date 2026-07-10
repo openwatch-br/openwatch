@@ -4,7 +4,6 @@ import Link from "next/link";
 import { severityColor } from "@/lib/utils";
 import { SEVERITY_LABELS, TYPOLOGY_LABELS } from "@/lib/constants";
 import type { CaseSignalBrief, SignalSeverity } from "@/lib/types";
-import type { GNode } from "@/hooks/useCaseGraph";
 import { X, User, Building2, Landmark, ExternalLink, ShieldAlert, Network } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,8 +34,15 @@ const TYPE_CONFIG: Record<
   },
 };
 
+interface SidebarNode {
+  id: string;
+  label: string;
+  node_type: string;
+  entity_id: string;
+}
+
 interface InvestigationSidebarProps {
-  node: GNode | null;
+  node: SidebarNode | null;
   nodeAttrs: Record<string, unknown>;
   signals: CaseSignalBrief[];
   entitySeverityMap: Record<string, SignalSeverity>;

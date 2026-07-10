@@ -138,7 +138,7 @@ export default function CapituloPage() {
               <EntityMiniCard
                 key={entity.id}
                 entity={entity}
-                href={`/radar/dossie/${caseId}?tab=rede`}
+                href={`/entity/${entity.id}`}
               />
             ))}
           </div>

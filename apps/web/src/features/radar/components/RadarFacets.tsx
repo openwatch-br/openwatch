@@ -1,6 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
 import { SeverityGlyph } from "@/components/SeverityGlyph";
 import { TYPOLOGY_LABELS } from "@/lib/constants";
 import type { RadarV2SeverityCounts, RadarV2TypologyCount, SignalSeverity } from "@/lib/types";
@@ -33,18 +32,19 @@ interface RadarFacetsProps {
   showConfidence: boolean;
 }
 
-function FacetTitle({ children }: { children: React.ReactNode }) {
+function GroupLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-3 font-ui text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-3)]">
+    <span className="shrink-0 font-ui text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--color-text-3)]">
       {children}
-    </div>
+    </span>
   );
 }
 
 /**
- * Faceted sidebar with mini-distributions — the investigator sees the shape of
- * the data before filtering. Severity + typology counts are real (radar
- * summary); confidence is a client-side refinement of the visible rows.
+ * Horizontal filter rail — sits directly above the case table. Severity and
+ * typology counts are real (radar summary); confidence is a client-side
+ * refinement of the visible rows. Each group is a row of toggle chips so the
+ * investigator scans and filters without leaving the table's eyeline.
  */
 export function RadarFacets({
   severityCounts,
@@ -57,121 +57,96 @@ export function RadarFacets({
   onConfBand,
   showConfidence,
 }: RadarFacetsProps) {
-  const topTypologies = [...typologies].sort((a, b) => b.count - a.count);
-  const maxTypology = Math.max(1, ...topTypologies.slice(0, 6).map((t) => t.count));
-  const remaining = topTypologies.length - 6;
+  const topTypologies = [...typologies].sort((a, b) => b.count - a.count).slice(0, 6);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Severity */}
-      <div>
-        <FacetTitle>Severidade</FacetTitle>
-        <div className="flex flex-col gap-2.5">
-          {SEV_ORDER.map((sev) => {
-            const checked = activeSeverity === sev;
-            const count = severityCounts?.[sev] ?? 0;
-            return (
-              <button
-                key={sev}
-                type="button"
-                onClick={() => onSeverity(checked ? "" : sev)}
-                className="flex items-center gap-2.5 text-left"
-              >
-                <span
-                  className={`flex h-[15px] w-[15px] shrink-0 items-center justify-center rounded border-[1.5px] ${
-                    checked
-                      ? "border-[var(--color-brand)] bg-[var(--color-brand)] text-[var(--color-brand-ink)]"
-                      : "border-[var(--color-border-strong)]"
-                  }`}
-                >
-                  {checked && <Check size={10} strokeWidth={3} />}
-                </span>
-                <span className="shrink-0" style={{ color: `var(--color-${sev})` }}>
-                  <SeverityGlyph severity={sev} size="sm" />
-                </span>
-                <span
-                  className={`flex-1 text-[12.5px] ${
-                    checked ? "text-[var(--color-text)]" : "text-[var(--color-text-2)]"
-                  }`}
-                >
-                  {SEV_LABEL[sev]}
-                </span>
-                <span className="font-mono text-[10.5px] text-[var(--color-text-3)]">{count}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Typology */}
-      <div>
-        <FacetTitle>Tipologia · top 6</FacetTitle>
-        <div className="flex flex-col gap-2.5">
-          {topTypologies.slice(0, 6).map((t) => {
-            const active = activeTypology === t.code;
-            return (
-              <button
-                key={t.code}
-                type="button"
-                onClick={() => onTypology(active ? "" : t.code)}
-                className="flex flex-col gap-1.5 text-left"
-              >
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-mono text-[10px] text-[var(--color-text-3)]">{t.code}</span>
-                  <span
-                    className={`flex-1 truncate text-xs ${
-                      active ? "text-[var(--color-brand-text)]" : "text-[var(--color-text-2)]"
-                    }`}
-                  >
-                    {TYPOLOGY_LABELS[t.code] ?? t.name}
-                  </span>
-                  <span className="font-mono text-[10.5px] text-[var(--color-text)]">{t.count}</span>
-                </div>
-                <div className="h-[3px] overflow-hidden rounded-full bg-[var(--color-border-subtle)]">
-                  <div
-                    className="h-full bg-[var(--color-brand)]"
-                    style={{ width: `${(t.count / maxTypology) * 100}%` }}
-                  />
-                </div>
-              </button>
-            );
-          })}
-          {remaining > 0 && (
-            <span className="text-[11.5px] text-[var(--color-text-3)]">
-              + {remaining} tipologias
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Confidence */}
-      {showConfidence && (
-        <div>
-          <FacetTitle>Confiança</FacetTitle>
-          <div className="flex flex-col gap-2.5">
-            {CONF_BANDS.map((b) => {
-              const active = confBand === b.id;
+    <div className="flex flex-col gap-3">
+      {/* Severity + Confidence share a row */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div className="flex items-center gap-2">
+          <GroupLabel>Severidade</GroupLabel>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {SEV_ORDER.map((sev) => {
+              const active = activeSeverity === sev;
+              const count = severityCounts?.[sev] ?? 0;
               return (
                 <button
-                  key={b.id}
+                  key={sev}
                   type="button"
-                  onClick={() => onConfBand(active ? "" : b.id)}
-                  className="flex items-center gap-2.5 text-left"
+                  aria-pressed={active}
+                  onClick={() => onSeverity(active ? "" : sev)}
+                  className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-1 text-[12px] transition-colors ${
+                    active
+                      ? "border-[var(--color-brand-border)] bg-[var(--color-brand-tint)] text-[var(--color-text)]"
+                      : "border-[var(--color-border)] text-[var(--color-text-2)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
+                  }`}
                 >
-                  <span className={`h-2 w-2 shrink-0 rounded-full ${CONF_DOT[b.id]}`} />
-                  <span
-                    className={`flex-1 text-[12.5px] ${
-                      active ? "text-[var(--color-text)]" : "text-[var(--color-text-2)]"
-                    }`}
-                  >
-                    {b.label}
+                  <span style={{ color: `var(--color-${sev})` }}>
+                    <SeverityGlyph severity={sev} size="sm" />
                   </span>
+                  {SEV_LABEL[sev]}
+                  <span className="font-mono text-[10.5px] text-[var(--color-text-3)]">{count}</span>
                 </button>
               );
             })}
           </div>
         </div>
-      )}
+
+        {showConfidence && (
+          <div className="flex items-center gap-2">
+            <GroupLabel>Confiança</GroupLabel>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {CONF_BANDS.map((b) => {
+                const active = confBand === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => onConfBand(active ? "" : b.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-1 text-[12px] transition-colors ${
+                      active
+                        ? "border-[var(--color-brand-border)] bg-[var(--color-brand-tint)] text-[var(--color-text)]"
+                        : "border-[var(--color-border)] text-[var(--color-text-2)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
+                    }`}
+                  >
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${CONF_DOT[b.id]}`} />
+                    {b.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Typology chips */}
+      <div className="flex items-center gap-2">
+        <GroupLabel>Tipologia</GroupLabel>
+        <div className="flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {topTypologies.map((t) => {
+            const active = activeTypology === t.code;
+            return (
+              <button
+                key={t.code}
+                type="button"
+                aria-pressed={active}
+                onClick={() => onTypology(active ? "" : t.code)}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-[var(--radius-sm)] border px-2.5 py-1 text-[12px] transition-colors ${
+                  active
+                    ? "border-[var(--color-brand-border)] bg-[var(--color-brand-tint)] text-[var(--color-text)]"
+                    : "border-[var(--color-border)] text-[var(--color-text-2)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text)]"
+                }`}
+                title={TYPOLOGY_LABELS[t.code] ?? t.name}
+              >
+                <span className="font-mono text-[10px] text-[var(--color-text-3)]">{t.code}</span>
+                <span className="max-w-[13rem] truncate">{TYPOLOGY_LABELS[t.code] ?? t.name}</span>
+                <span className="font-mono text-[10.5px] text-[var(--color-text-3)]">{t.count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

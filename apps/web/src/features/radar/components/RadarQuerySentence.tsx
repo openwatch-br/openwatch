@@ -14,19 +14,9 @@ import {
   CONDITION_LABEL,
   type RadarFilters,
   type FilterKey,
-  type RadarView,
 } from "../filters";
-import { RadarViewToggle } from "./RadarViewToggle";
-
-const VIEW_WORD: Record<RadarView, string> = {
-  cases: "casos",
-  signals: "sinais",
-  raw: "registros",
-};
 
 interface RadarQuerySentenceProps {
-  view: RadarView;
-  onViewChange: (v: RadarView) => void;
   filters: RadarFilters;
   onSet: (patch: Partial<RadarFilters>) => void;
   onRemove: (key: FilterKey) => void;
@@ -42,8 +32,6 @@ interface RadarQuerySentenceProps {
  * current slice.
  */
 export function RadarQuerySentence({
-  view,
-  onViewChange,
   filters,
   onSet,
   onRemove,
@@ -94,7 +82,7 @@ export function RadarQuerySentence({
         <div className="flex flex-1 flex-wrap items-center gap-2 text-[14.5px] leading-loose text-[var(--color-text-2)]">
           <span>Mostrar</span>
           <span className="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] px-2.5 py-1 font-semibold text-[var(--color-text)]">
-            {VIEW_WORD[view]}
+            casos
           </span>
 
           {chips.map((chip) => (
@@ -204,9 +192,6 @@ export function RadarQuerySentence({
       <div className="flex flex-wrap items-center gap-3">
         <span className="font-mono text-xs text-[var(--color-text)]">{countLabel}</span>
         <span className="font-mono text-xs text-[var(--color-text-3)]">· {snapshotLabel}</span>
-        <div className="ml-auto">
-          <RadarViewToggle value={view} onChange={onViewChange} />
-        </div>
       </div>
     </div>
   );

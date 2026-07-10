@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import type { RadarV2CasePreviewResponse, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { formatBRL, formatDate, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
-import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
 import {
   Calendar,
   ChevronLeft,
@@ -165,16 +164,6 @@ export function RadarDetailPanel({
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            {signal && !showFlow && (
-              <button
-                type="button"
-                onClick={() => setShowFlow(true)}
-                className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/10 px-2.5 py-1 text-[10px] font-semibold text-accent hover:bg-accent/20 transition-colors"
-              >
-                <Network className="h-3 w-3" />
-                Ver teia
-              </button>
-            )}
             <button
               type="button"
               onClick={onClose}
@@ -184,13 +173,6 @@ export function RadarDetailPanel({
             </button>
           </div>
         </div>
-
-        {/* Flow */}
-        {showFlow && signal && (
-          <div className="flex-1 overflow-hidden p-3">
-            <SignalFlowInline signalId={signal.signal.id} />
-          </div>
-        )}
 
         {/* Body */}
         {!showFlow && (

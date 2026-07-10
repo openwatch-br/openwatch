@@ -10,11 +10,9 @@ import { SkeletonCard } from "@/components/Skeleton";
 import { RadarQuerySentence } from "@/features/radar/components/RadarQuerySentence";
 import { RadarFacets } from "@/features/radar/components/RadarFacets";
 import { RadarCasesTable } from "@/features/radar/components/RadarCasesTable";
-import { RadarSignalsTable } from "@/features/radar/components/RadarSignalsTable";
 import {
   EMPTY_FILTERS,
   type RadarFilters,
-  type RadarView,
   type FilterKey,
 } from "@/features/radar/filters";
 
@@ -22,7 +20,6 @@ function RadarPageInner() {
   const router = useRouter();
   const params = useSearchParams();
 
-  const view = (params.get("view") as RadarView) || "cases";
   const confBand = params.get("conf") || "";
   const filters: RadarFilters = {
     ...EMPTY_FILTERS,
@@ -90,11 +87,7 @@ function RadarPageInner() {
   });
 
   const totalCases = summary?.totals?.cases ?? 0;
-  const totalSignals = summary?.totals?.signals ?? 0;
-  const countLabel =
-    view === "cases"
-      ? `${formatNumber(totalCases)} casos`
-      : `${formatNumber(totalSignals)} sinais`;
+  const countLabel = `${formatNumber(totalCases)} casos`;
   const snapshotLabel = summary?.snapshot_at
     ? `atualizado ${relativeTime(summary.snapshot_at)}`
     : "—";
@@ -109,8 +102,6 @@ function RadarPageInner() {
   return (
     <div className="ow-mode-working mx-auto w-full max-w-[1440px]">
       <RadarQuerySentence
-        view={view}
-        onViewChange={(v) => setParams({ view: v === "cases" ? "" : v })}
         filters={filters}
         onSet={applyPatch}
         onRemove={removeChip}
@@ -119,28 +110,23 @@ function RadarPageInner() {
         onSaveRecorte={saveRecorte}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr]">
-        <aside className="border-b border-[var(--color-border-subtle)] px-5 py-5 lg:border-b-0 lg:border-r">
-          <RadarFacets
-            severityCounts={summary?.severity_counts}
-            activeSeverity={filters.severity}
-            onSeverity={(sev) => applyPatch({ severity: sev })}
-            typologies={summary?.typology_counts ?? []}
-            activeTypology={filters.typology}
-            onTypology={(code) => applyPatch({ typology: code })}
-            confBand={confBand}
-            onConfBand={(band) => setParams({ conf: band })}
-            showConfidence
-          />
-        </aside>
+      {/* Filters sit above the list, in the table's eyeline */}
+      <div className="border-b border-[var(--color-border-subtle)] px-4 py-4 sm:px-7">
+        <RadarFacets
+          severityCounts={summary?.severity_counts}
+          activeSeverity={filters.severity}
+          onSeverity={(sev) => applyPatch({ severity: sev })}
+          typologies={summary?.typology_counts ?? []}
+          activeTypology={filters.typology}
+          onTypology={(code) => applyPatch({ typology: code })}
+          confBand={confBand}
+          onConfBand={(band) => setParams({ conf: band })}
+          showConfidence
+        />
+      </div>
 
-        <div className="min-w-0">
-          {view === "cases" ? (
-            <RadarCasesTable filters={filters} confBand={confBand} />
-          ) : (
-            <RadarSignalsTable filters={filters} confBand={confBand} raw={view === "raw"} />
-          )}
-        </div>
+      <div className="min-w-0">
+        <RadarCasesTable filters={filters} confBand={confBand} />
       </div>
     </div>
   );

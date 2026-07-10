@@ -143,6 +143,8 @@ export interface RadarV2CaseItem {
   typology_codes: string[];
   period_start?: string | null;
   period_end?: string | null;
+  total_value_brl?: number | null;
+  avg_confidence?: number | null;
   created_at: string;
   case_type?: string | null;
 }

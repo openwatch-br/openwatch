@@ -157,7 +157,7 @@ export const CaseTimelineCard: React.FC<CaseTimelineCardProps> = ({ item, side }
                     {item.participants.map((p) => (
                         <Link
                             key={`${item.id}-${p.entityId}`}
-                            href={`/radar/rede/${p.entityId}`}
+                            href={`/entity/${p.entityId}`}
                             style={{ textDecoration: 'none' }}
                         >
                             <span

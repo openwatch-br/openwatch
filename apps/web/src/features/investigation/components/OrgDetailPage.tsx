@@ -1,7 +1,7 @@
 "use client";
 
-// Perfil de órgão (Nexo) — mesma composição centrada no grafo do perfil de
-// entidade. Trilho de identidade + ego-graph + distribuição de severidade.
+// Perfil de órgão (Nexo) — trilho de identidade + distribuição de
+// severidade.
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
@@ -13,7 +13,6 @@ import { EmptyState } from "@/components/EmptyState";
 import type { OrgSummary } from "@/lib/types";
 import { OrgIdentityRail } from "./org/OrgIdentityRail";
 import { OrgSeverityStrip } from "./org/OrgSeverityStrip";
-import { EntityEgoSection } from "./entity/EntityEgoSection";
 
 export default function OrgDetailPage() {
   const params = useParams();
@@ -77,7 +76,6 @@ export default function OrgDetailPage() {
         <OrgIdentityRail org={org} />
 
         <div className="flex min-w-0 flex-col gap-6">
-          <EntityEgoSection entityId={org.id} height={480} />
           <OrgSeverityStrip
             distribution={org.severity_distribution}
             total={org.total_signals}

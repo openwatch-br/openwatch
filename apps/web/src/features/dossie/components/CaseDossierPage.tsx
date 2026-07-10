@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import dynamic from "next/dynamic";
+import { useMemo } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { AlertTriangle } from "lucide-react";
 
 import { useDossieBook } from "./DossieBookContext";
@@ -22,39 +21,15 @@ import {
 import { buildCaseTimeline } from "../helpers/buildCaseTimeline";
 import { formatBRL, formatDate } from "@/lib/utils";
 
-const CaseNetworkGraph = dynamic(() => import("./CaseNetworkGraph"), {
-  ssr: false,
-  loading: () => <GraphFallback />,
-});
-
-function GraphFallback() {
-  return (
-    <div className="flex h-[360px] items-center justify-center font-mono text-[13px] text-muted">
-      Carregando rede…
-    </div>
-  );
-}
-
 export default function CaseDossierPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const caseId = String(params["caseId"] ?? "");
   const { data, loading, error } = useDossieBook();
-  const tab = searchParams.get("tab");
 
   const timelineModel = useMemo(
     () => (data ? buildCaseTimeline(data) : null),
     [data],
   );
-
-  // Honor TabNav's Cronologia/Rede sub-tabs as in-page scroll anchors.
-  useEffect(() => {
-    if (!data) return;
-    const id = tab === "rede" ? "rede" : null;
-    if (!id) return;
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [tab, data]);
 
   if (loading) {
     return (
@@ -106,7 +81,6 @@ export default function CaseDossierPage() {
       }),
     ),
     { kind: "anchor", num: "—", label: "Linha do tempo", id: "cronologia" },
-    { kind: "anchor", num: "—", label: "Rede societária", id: "rede" },
   ];
 
   const railMeta = {
@@ -126,19 +100,6 @@ export default function CaseDossierPage() {
         </DossieEmbedFrame>
       </div>
     ) : null;
-
-  const graphEmbed = (
-    <div id="rede" className="scroll-mt-[calc(var(--shell-height)+16px)]">
-      <DossieEmbedFrame
-        label={`Grafo do caso · ${data.entities.length} nós`}
-        action={{ href: "/radar/rede", label: "abrir na Rede ⤢" }}
-        headerBar
-        bodyClassName="p-0"
-      >
-        <CaseNetworkGraph caseId={caseId} timelineRaw={data} />
-      </DossieEmbedFrame>
-    </div>
-  );
 
   return (
     <DossieReadingShell meta={railMeta} toc={toc} scrollSpy>
@@ -164,13 +125,11 @@ export default function CaseDossierPage() {
         <div key={chapter.typologyCode}>
           <DossieChapterSection chapter={chapter} caseId={caseId} />
           {i === 0 && timelineEmbed}
-          {i === 1 && graphEmbed}
         </div>
       ))}
 
-      {/* Embeds not yet placed inline (few/no chapters) fall to the end. */}
+      {/* Embed not yet placed inline (few/no chapters) falls to the end. */}
       {chapters.length < 1 && timelineEmbed}
-      {chapters.length < 2 && graphEmbed}
 
       {finding && (
         <DossiePullQuote

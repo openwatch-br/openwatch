@@ -5,7 +5,6 @@ import React, { useEffect, useState } from "react";
 import type { RadarV2CasePreviewResponse, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { formatBRL, formatDate, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
-import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
 import { Calendar, FileText, Network, Users, X, ChevronDown, ChevronUp } from "lucide-react";
 
 /** Read CSS variable at runtime */
@@ -137,16 +136,6 @@ export function RadarPreviewDrawer({
             </div>
           )}
           <div className="flex items-center gap-2">
-            {signal && !showFlow && (
-              <button
-                type="button"
-                onClick={() => setShowFlow(true)}
-                className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/20 transition-colors"
-              >
-                <Network className="h-3.5 w-3.5" />
-                Ver teia
-              </button>
-            )}
             <button
               type="button"
               onClick={onClose}
@@ -157,13 +146,6 @@ export function RadarPreviewDrawer({
             </button>
           </div>
         </div>
-
-        {/* Flow view */}
-        {showFlow && signal && (
-          <div className="flex-1 overflow-hidden p-4">
-            <SignalFlowInline signalId={signal.signal.id} />
-          </div>
-        )}
 
         {/* Scrollable body — details view */}
         {!showFlow && <div className="overflow-y-auto flex-1 px-6 py-5">

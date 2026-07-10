@@ -6,8 +6,6 @@ import type { EntityDetail, RadarV2SignalPreviewResponse } from "@/lib/types";
 import { getEntity, getRadarV2SignalPreview } from "@/lib/api";
 import { displayIdentifierValue, formatBRL, formatDate, formatIdentifier, normalizeUnknownDisplay } from "@/lib/utils";
 import { Badge } from "@/components/Badge";
-import { SignalFlowInline } from "@/features/radar/components/SignalFlowInline";
-import { EntityEgoGraph } from "@/components/EntityEgoGraph";
 import {
   Building2,
   Calendar,
@@ -15,7 +13,6 @@ import {
   ChevronRight as ChevronRightIcon,
   FileText,
   Landmark,
-  Network,
   User,
   Users,
   X,
@@ -105,7 +102,6 @@ export function DossierDetailPanel({
   const [signalPreview, setSignalPreview] = useState<RadarV2SignalPreviewResponse | null>(null);
   const [signalLoading, setSignalLoading] = useState(false);
   const [signalError, setSignalError] = useState<string | null>(null);
-  const [showFlow, setShowFlow] = useState(false);
 
   // Entity state
   const [entityDetail, setEntityDetail] = useState<EntityDetail | null>(null);
@@ -126,13 +122,11 @@ export function DossierDetailPanel({
   useEffect(() => {
     if (!selectedSignalId || panelMode !== "signal") {
       setSignalPreview(null);
-      setShowFlow(false);
       return;
     }
     let stale = false;
     setSignalLoading(true);
     setSignalError(null);
-    setShowFlow(false);
     getRadarV2SignalPreview(selectedSignalId, { limit: 10 })
       .then((data) => { if (!stale) setSignalPreview(data); })
       .catch(() => { if (!stale) setSignalError("Nao foi possivel carregar a previa do sinal"); })
@@ -192,69 +186,42 @@ export function DossierDetailPanel({
       >
         {/* Header */}
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3">
-          {showFlow ? (
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setShowFlow(false)} className="rounded-md p-1 text-muted hover:bg-surface-subtle">
+          <div className="flex items-center gap-2 min-w-0">
+            {breadcrumbs.length > 1 && (
+              <button type="button" onClick={onGoBack} className="rounded-md p-1 text-muted hover:bg-surface-subtle shrink-0">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <span className="text-sm font-semibold text-primary">Teia de ligacoes</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 min-w-0">
-              {breadcrumbs.length > 1 && (
-                <button type="button" onClick={onGoBack} className="rounded-md p-1 text-muted hover:bg-surface-subtle shrink-0">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-              )}
-              <div className="min-w-0">
-                {/* Breadcrumb */}
-                <div className="flex items-center gap-1 text-[10px] text-muted">
-                  {breadcrumbs.map((bc, i) => (
-                    <React.Fragment key={i}>
-                      {i > 0 && <ChevronRightIcon className="h-2.5 w-2.5" />}
-                      {bc.onClick ? (
-                        <button type="button" onClick={bc.onClick} className="hover:text-accent transition-colors">
-                          {bc.label}
-                        </button>
-                      ) : (
-                        <span className="text-secondary font-semibold">{bc.label}</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <p className="text-sm font-semibold text-primary">
-                  {panelMode === "signal" ? "Detalhe do Sinal" : panelMode === "entity" ? "Perfil da Entidade" : "Rede"}
-                </p>
-              </div>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 shrink-0">
-            {panelMode === "signal" && signalPreview && !showFlow && (
-              <button
-                type="button"
-                onClick={() => setShowFlow(true)}
-                className="flex items-center gap-1.5 rounded-md border border-accent/30 bg-accent/10 px-2.5 py-1 text-[10px] font-semibold text-accent hover:bg-accent/20 transition-colors"
-              >
-                <Network className="h-3 w-3" />
-                Ver teia
-              </button>
             )}
+            <div className="min-w-0">
+              {/* Breadcrumb */}
+              <div className="flex items-center gap-1 text-[10px] text-muted">
+                {breadcrumbs.map((bc, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && <ChevronRightIcon className="h-2.5 w-2.5" />}
+                    {bc.onClick ? (
+                      <button type="button" onClick={bc.onClick} className="hover:text-accent transition-colors">
+                        {bc.label}
+                      </button>
+                    ) : (
+                      <span className="text-secondary font-semibold">{bc.label}</span>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+              <p className="text-sm font-semibold text-primary">
+                {panelMode === "signal" ? "Detalhe do Sinal" : panelMode === "entity" ? "Perfil da Entidade" : "Rede"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
             <button type="button" onClick={onClose} className="rounded-md p-1 text-muted hover:bg-surface-subtle">
               <X className="h-4 w-4" />
             </button>
           </div>
         </div>
 
-        {/* Flow view */}
-        {showFlow && signalPreview && (
-          <div className="flex-1 overflow-hidden p-3">
-            <SignalFlowInline signalId={signalPreview.signal.id} />
-          </div>
-        )}
-
         {/* Body */}
-        {!showFlow && (
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
             {/* ── Signal mode ── */}
             {panelMode === "signal" && (
               <>
@@ -285,13 +252,11 @@ export function DossierDetailPanel({
                   <EntityContent
                     entity={entityDetail}
                     entityId={selectedEntityId}
-                    onNavigateToNetwork={onNavigateToNetwork}
                   />
                 )}
               </>
             )}
-          </div>
-        )}
+        </div>
       </div>
     </>
   );
@@ -533,11 +498,9 @@ function SignalContent({
 function EntityContent({
   entity,
   entityId,
-  onNavigateToNetwork,
 }: {
   entity: EntityDetail;
   entityId: string;
-  onNavigateToNetwork: (entityId: string) => void;
 }) {
   const config = TYPE_CONFIG[entity.type] ?? TYPE_CONFIG.company;
   const Icon = config.icon;
@@ -602,25 +565,7 @@ function EntityContent({
         </div>
       )}
 
-      {/* Mini network graph */}
-      <div className="rounded-lg border border-border p-3">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted mb-2">
-          Rede de conexoes
-        </p>
-        <div className="h-[280px] rounded-lg overflow-hidden border border-border">
-          <EntityEgoGraph entityId={entityId} height={280} />
-        </div>
-      </div>
-
       {/* Actions */}
-      <button
-        type="button"
-        onClick={() => onNavigateToNetwork(entityId)}
-        className="flex items-center justify-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-4 py-2.5 text-sm font-semibold text-accent hover:bg-accent/20 transition-colors w-full"
-      >
-        <Network className="h-4 w-4" />
-        Ver Rede Completa
-      </button>
       <Link
         href={`/entity/${entityId}`}
         className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface-subtle px-4 py-2.5 text-sm font-semibold text-secondary hover:bg-surface-base transition-colors w-full"

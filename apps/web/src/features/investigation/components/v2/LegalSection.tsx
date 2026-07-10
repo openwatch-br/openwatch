@@ -19,6 +19,8 @@ function TypologyLegalCardInner({ code, name }: TypologyLegalCardProps) {
     queryFn: () => fetchTypologyLegalBasis(code),
   });
 
+  if (!data) return null;
+
   return (
     <div className="rounded-xl border border-border bg-surface-card p-4 space-y-3">
       <div className="flex items-start gap-2">
@@ -99,9 +101,9 @@ function HypothesesSection() {
     queryFn: async (): Promise<RecentHypothesis[]> => {
       const casesData = await getRadarV2Cases({ limit: 5 });
       const allHypos: RecentHypothesis[] = [];
-      for (const c of casesData.items) {
+      for (const c of casesData?.items ?? []) {
         const hypos = await fetchCaseLegalHypotheses(c.id);
-        for (const h of hypos) {
+        for (const h of hypos ?? []) {
           allHypos.push({ caseId: c.id, caseTitle: c.title, hypothesis: h });
         }
       }

@@ -1,19 +1,16 @@
 "use client";
 
-// Perfil de entidade (Nexo) — o ego-graph é a peça central. Trilho de
-// identidade compacto à esquerda; grafo + sinais vinculados à direita.
-// A composição vive em sub-componentes (entity/*) para evitar god-file.
+// Perfil de entidade (Nexo). Trilho de identidade compacto à esquerda;
+// sinais vinculados à direita. A composição vive em sub-componentes
+// (entity/*) para evitar god-file.
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { getEntity, getGraphNeighborhood, getRadarV2Signals } from "@/lib/api";
 import { EmptyState } from "@/components/EmptyState";
 import { DetailSkeleton } from "@/components/Skeleton";
 import type { EntityDetail, NeighborhoodResponse, RadarV2SignalItem } from "@/lib/types";
 import { EntityIdentityRail } from "./entity/EntityIdentityRail";
-import { EntityEgoSection } from "./entity/EntityEgoSection";
 import { EntitySignalsList } from "./entity/EntitySignalsList";
 
 export default function EntityDetailPage() {
@@ -89,23 +86,10 @@ export default function EntityDetailPage() {
 
   return (
     <div className="animate-slide-up mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      {/* Breadcrumb */}
-      <nav className="mb-5 flex items-center gap-1.5" style={{ color: "var(--color-text-3)" }}>
-        <Link href="/radar/rede" className="text-mono-xs transition-colors hover:text-[var(--color-brand-text)]">
-          Rede
-        </Link>
-        <ChevronRight className="h-3 w-3 opacity-40" />
-        <span className="text-mono-xs max-w-xs truncate" style={{ color: "var(--color-text-2)" }}>
-          {entity.name}
-        </span>
-      </nav>
-
-      {/* Ego-graph centred profile */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[300px_1fr]">
         <EntityIdentityRail entity={entity} stats={stats} />
 
         <div className="flex min-w-0 flex-col gap-6">
-          <EntityEgoSection entityId={entity.id} />
           <EntitySignalsList signals={signals} />
         </div>
       </div>

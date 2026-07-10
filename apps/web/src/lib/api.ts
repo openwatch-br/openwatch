@@ -331,8 +331,10 @@ export function comparePrices(params?: {
   return fetchJSON(`/public/compare/prices${qs ? `?${qs}` : ""}`);
 }
 
-export function fetchTypologyLegalBasis(code: string): Promise<TypologyLegalBasis> {
-  return fetchJSON(`/public/typology/${code}/legal-basis`);
+export async function fetchTypologyLegalBasis(code: string): Promise<TypologyLegalBasis | null> {
+  const res = await fetch(`${API_BASE}/public/typology/${code}/legal-basis`);
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export async function fetchTipologiaList(): Promise<TypologyLegalBasis[]> {
@@ -347,7 +349,8 @@ export function fetchTipologia(code: string): Promise<TypologyLegalBasis> {
 export async function fetchCaseLegalHypotheses(caseId: string): Promise<LegalHypothesis[]> {
   const res = await fetch(`${API_BASE}/public/case/${caseId}/legal-hypothesis`);
   if (!res.ok) return [];
-  return res.json();
+  const data = await res.json();
+  return Array.isArray(data) ? data : (data.hypotheses ?? []);
 }
 
 export async function fetchRelatedSignals(signalId: string): Promise<RelatedSignal[]> {
