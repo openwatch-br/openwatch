@@ -70,8 +70,10 @@ export default function CapituloPage() {
 
   const meta: string[] = [
     `${chapter.signals.length} ${chapter.signals.length === 1 ? "sinal" : "sinais"}`,
-    `confiança média ${chapter.avgConfidence}%`,
   ];
+  if (chapter.avgConfidence != null) {
+    meta.push(`confiança média ${chapter.avgConfidence}%`);
+  }
   if (periodStr) meta.push(periodStr);
   if (chapter.totalValue > 0) meta.push(formatBRL(chapter.totalValue));
 

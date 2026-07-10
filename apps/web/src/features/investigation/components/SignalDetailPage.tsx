@@ -159,7 +159,7 @@ export default function SignalDetailPage() {
               fields={fields}
               score={score}
               scoreNote={
-                score >= 80
+                score != null && score >= 80
                   ? "≥ 80 corroborada · fontes oficiais concordantes"
                   : "indício preliminar · requer corroboração adicional"
               }

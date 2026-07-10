@@ -35,8 +35,8 @@ interface InferencePanelProps {
   title?: string;
   subtitle?: string;
   fields: InferenceField[];
-  /** 0–100 confidence score. */
-  score: number;
+  /** 0–100 confidence score; null when the signal carries no confidence data. */
+  score: number | null;
   scoreNote?: string;
   className?: string;
 }
@@ -49,7 +49,7 @@ export function InferencePanel({
   scoreNote,
   className,
 }: InferencePanelProps) {
-  const clamped = Math.max(0, Math.min(100, score));
+  const clamped = score != null ? Math.max(0, Math.min(100, score)) : null;
   return (
     <div
       className={cn(
@@ -95,30 +95,32 @@ export function InferencePanel({
           );
         })}
 
-        <div className="flex flex-col gap-2 border-t border-border-subtle pt-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted">Score de confiança</span>
-            <span className="font-mono text-[13px] font-semibold text-primary tabular-nums">
-              {clamped} / 100
-            </span>
-          </div>
-          <div className="relative h-1.5 rounded-full bg-border-subtle">
-            <div
-              className="absolute inset-y-0 left-0 rounded-full"
-              style={{ width: `${clamped}%`, background: "var(--color-brand)" }}
-            />
-            {[60, 80, 95].map((t) => (
+        {clamped != null && (
+          <div className="flex flex-col gap-2 border-t border-border-subtle pt-4">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted">Score de confiança</span>
+              <span className="font-mono text-[13px] font-semibold text-primary tabular-nums">
+                {clamped} / 100
+              </span>
+            </div>
+            <div className="relative h-1.5 rounded-full bg-border-subtle">
               <div
-                key={t}
-                className="absolute -top-[3px] -bottom-[3px] w-px bg-border-strong"
-                style={{ left: `${t}%` }}
+                className="absolute inset-y-0 left-0 rounded-full"
+                style={{ width: `${clamped}%`, background: "var(--color-brand)" }}
               />
-            ))}
+              {[60, 80, 95].map((t) => (
+                <div
+                  key={t}
+                  className="absolute -top-[3px] -bottom-[3px] w-px bg-border-strong"
+                  style={{ left: `${t}%` }}
+                />
+              ))}
+            </div>
+            {scoreNote && (
+              <p className="m-0 font-mono text-[10px] text-muted">{scoreNote}</p>
+            )}
           </div>
-          {scoreNote && (
-            <p className="m-0 font-mono text-[10px] text-muted">{scoreNote}</p>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );

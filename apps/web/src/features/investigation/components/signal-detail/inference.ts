@@ -45,8 +45,8 @@ export function legalRefs(
   return refs.filter((v, i, arr) => arr.indexOf(v) === i).slice(0, 4);
 }
 
-export function inferenceScore(signal: SignalDetail): number {
-  return Math.round(signal.confidence * 100);
+export function inferenceScore(signal: SignalDetail): number | null {
+  return signal.confidence != null ? Math.round(signal.confidence * 100) : null;
 }
 
 export function buildInferenceFields(

@@ -37,8 +37,13 @@ export function DossieChapterSection({
             eventos correlacionados
           </>
         ) : null}
-        , com confiança média de{" "}
-        <span className="font-mono text-primary">{chapter.avgConfidence}%</span>.
+        {chapter.avgConfidence != null ? (
+          <>
+            , com confiança média de{" "}
+            <span className="font-mono text-primary">{chapter.avgConfidence}%</span>
+          </>
+        ) : null}
+        .
       </DossieParagraph>
 
       <div className="my-5 flex flex-col gap-2.5">

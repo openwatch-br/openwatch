@@ -11,7 +11,7 @@ import type { TimelineSignalDTO } from "@/lib/types";
 interface SinalHeaderProps {
   signal: TimelineSignalDTO;
   caseId: string;
-  confidenceScore: number;
+  confidenceScore: number | null;
 }
 
 /** Forensic report header: identifier row, badges, headline and source line. */

@@ -4,6 +4,7 @@ from datetime import datetime
 from io import StringIO
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
+from api.core_client import CoreNotFoundError
 from openwatch_models.contestation import Contestation
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -182,7 +183,7 @@ async def coverage_v2_sources(
 async def coverage_v2_source_preview(
     connector: str,
     session: DbSession,
-    runs_limit: int = Query(10, ge=3, le=50),
+    runs_limit: int = Query(10, ge=3, le=120),
 ):
     preview = await get_coverage_v2_source_preview(
         session,
@@ -378,15 +379,17 @@ async def case_detail(case_id: uuid.UUID, session: DbSession):
         raise HTTPException(status_code=404, detail="Case not found")
     entities = await get_case_entities_with_roles(session, case_id)
 
-    attrs = case.attrs or {}
+    # Core returns plain dicts (see core_adapter/CoreClient), not ORM objects.
+    attrs = case.get("attrs") or {}
+    items = case.get("items") or []
     entity_names = attrs.get("entity_names", [])
-    n_signals = len(case.items)
+    n_signals = len(items)
 
     # Collect unique typology labels from signals
     typology_names = sorted({
-        item.signal.typology.name
-        for item in case.items
-        if item.signal.typology
+        item["signal"]["typology"]["name"]
+        for item in items
+        if item.get("signal") and item["signal"].get("typology")
     })
 
     # Build contextual explanation
@@ -403,38 +406,41 @@ async def case_detail(case_id: uuid.UUID, session: DbSession):
         explanation += " por entidades que aparecem em multiplas irregularidades potenciais."
 
     signal_items = []
-    for item in case.items:
-        signal = item.signal
+    for item in items:
+        signal = item.get("signal") or {}
+        typology = signal.get("typology") or {}
         signal_items.append(
             {
-                "id": signal.id,
-                "typology_code": signal.typology.code,
-                "typology_name": signal.typology.name,
-                "severity": signal.severity,
-                "confidence": signal.confidence,
-                "title": signal.title,
-                "summary": signal.summary,
-                "explanation_md": signal.explanation_md,
-                "factors": signal.factors,
-                "factor_descriptions": adapter_get_factor_descriptions(
-                    signal.factors or {},
-                    typology_code=signal.typology.code if signal.typology else None,
+                "id": signal.get("id"),
+                "typology_code": typology.get("code"),
+                "typology_name": typology.get("name"),
+                "severity": signal.get("severity"),
+                "confidence": signal.get(
+                    "confidence", signal.get("signal_confidence_score")
                 ),
-                "entity_count": len(signal.entity_ids or []),
-                "evidence_count": len(signal.event_ids or []),
-                "period_start": signal.period_start,
-                "period_end": signal.period_end,
-                "created_at": signal.created_at,
+                "title": signal.get("title"),
+                "summary": signal.get("summary"),
+                "explanation_md": signal.get("explanation_md"),
+                "factors": signal.get("factors"),
+                "factor_descriptions": adapter_get_factor_descriptions(
+                    signal.get("factors") or {},
+                    typology_code=typology.get("code"),
+                ),
+                "entity_count": len(signal.get("entity_ids") or []),
+                "evidence_count": len(signal.get("event_ids") or []),
+                "period_start": signal.get("period_start"),
+                "period_end": signal.get("period_end"),
+                "created_at": signal.get("created_at"),
             }
         )
 
     return {
-        "id": case.id,
-        "title": case.title,
-        "status": case.status,
-        "severity": case.severity,
-        "summary": case.summary,
-        "case_type": case.case_type,
+        "id": case.get("id"),
+        "title": case.get("title"),
+        "status": case.get("status"),
+        "severity": case.get("severity"),
+        "summary": case.get("summary"),
+        "case_type": case.get("case_type"),
         "explanation": explanation,
         "entity_names": entity_names,
         "entities": [
@@ -452,8 +458,8 @@ async def case_detail(case_id: uuid.UUID, session: DbSession):
         "total_value_brl": attrs.get("total_value_brl"),
         "period_start": attrs.get("period_start"),
         "period_end": attrs.get("period_end"),
-        "attrs": case.attrs,
-        "created_at": case.created_at,
+        "attrs": attrs,
+        "created_at": case.get("created_at"),
         "signals": signal_items,
     }
 
@@ -868,58 +874,40 @@ async def replay_signal_endpoint(signal_id: uuid.UUID, session: DbSession):
 
 @router.get("/signal/{signal_id}/provenance")
 async def signal_provenance(signal_id: uuid.UUID, session: DbSession):
-    """Full provenance chain: Signal -> Events -> RawSources."""
+    """Provenance for a signal.
+
+    openwatch-core's /internal/signal/{id}/provenance returns the signal's
+    evidence-package record (source_hash, model_version, snapshot URI, ...),
+    not a per-event raw-source map — that granularity is not exposed by core.
+    We keep the public contract (events list) and attach the evidence
+    package; `events` stays empty until core exposes event-level sources.
+    """
     signal = await adapter_get_signal_by_id(session, signal_id)
     if signal is None:
         raise HTTPException(status_code=404, detail="Signal not found")
-    event_ids = []
-    from contextlib import suppress
-    for eid_str in (signal.get("event_ids") or []):
-        with suppress(ValueError, TypeError):
-            event_ids.append(uuid.UUID(str(eid_str)))
-    event_raw_sources = await adapter_get_signal_provenance(session, signal_id)
+    try:
+        evidence_package = await adapter_get_signal_provenance(session, signal_id)
+    except CoreNotFoundError:
+        evidence_package = None
+    typology = signal.get("typology") or {}
     return {
-        "signal_id": signal["id"],
+        "signal_id": signal.get("id"),
         "title": signal.get("title"),
-        "typology_code": signal.get("typology_code"),
-        "events": [
-            {
-                "event_id": eid,
-                "raw_sources": [
-                    {
-                        "id": rs.id,
-                        "connector": rs.connector,
-                        "job": rs.job,
-                        "raw_id": rs.raw_id,
-                        "raw_data": rs.raw_data,
-                        "created_at": rs.created_at,
-                    }
-                    for rs in sources
-                ],
-            }
-            for eid, sources in event_raw_sources.items()
-        ],
+        "typology_code": signal.get("typology_code") or typology.get("code"),
+        "events": [],
+        "evidence_package": evidence_package,
     }
 
 
 @router.get("/event/{event_id}/raw-sources")
 async def event_raw_sources_endpoint(event_id: uuid.UUID, session: DbSession):
-    """Original API JSON for one event."""
-    raw_sources = await adapter_get_signal_provenance(session, event_id)
-    return {
-        "event_id": event_id,
-        "raw_sources": [
-            {
-                "id": rs.id,
-                "connector": rs.connector,
-                "job": rs.job,
-                "raw_id": rs.raw_id,
-                "raw_data": rs.raw_data,
-                "created_at": rs.created_at,
-            }
-            for rs in raw_sources
-        ],
-    }
+    """Original API JSON for one event.
+
+    openwatch-core does not expose event-level raw sources; keep the
+    contract and return an empty list until it does.
+    """
+    _ = session
+    return {"event_id": event_id, "raw_sources": []}
 
 
 @router.get("/case/{case_id}/provenance")
@@ -938,7 +926,7 @@ async def case_related(case_id: uuid.UUID, session: DbSession):
     if case is None:
         raise HTTPException(status_code=404, detail="Case not found")
 
-    entity_name_set = list((case.attrs or {}).get("entity_names", []))
+    entity_name_set = list((case.get("attrs") or {}).get("entity_names", []))
     if not entity_name_set:
         return []
 

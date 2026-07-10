@@ -126,7 +126,9 @@ export default function SinalPage() {
     return <SinalError caseId={caseId} message="Sinal não encontrado." />;
   }
 
-  const confidenceScore = signal.signal_confidence_score ?? Math.round(signal.confidence * 100);
+  const confidenceScore =
+    signal.signal_confidence_score ??
+    (signal.confidence != null ? Math.round(signal.confidence * 100) : null);
 
   const factorText =
     signal.factor_descriptions && Object.keys(signal.factor_descriptions).length > 0
@@ -203,7 +205,7 @@ export default function SinalPage() {
               fields={fields}
               score={confidenceScore}
               scoreNote={
-                confidenceScore >= 80
+                confidenceScore != null && confidenceScore >= 80
                   ? "≥ 80 corroborada · fontes oficiais concordantes"
                   : "indício preliminar · requer corroboração adicional"
               }

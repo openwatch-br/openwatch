@@ -10,7 +10,7 @@ import type { SignalDetail } from "@/lib/types";
 
 interface SignalDetailHeaderProps {
   signal: SignalDetail;
-  confidenceScore: number;
+  confidenceScore: number | null;
   onExport?: () => void;
   exporting?: boolean;
 }

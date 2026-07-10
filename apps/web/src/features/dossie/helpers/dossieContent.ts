@@ -23,7 +23,8 @@ export interface DossieChapter {
   signals: TimelineSignalDTO[];
   entities: TimelineEntityDTO[];
   totalValue: number;
-  avgConfidence: number;
+  /** 0-100, or null when no signal in the chapter carries a confidence value. */
+  avgConfidence: number | null;
 }
 
 function maxSeverity(signals: TimelineSignalDTO[]): SignalSeverity {
@@ -76,12 +77,20 @@ export function buildDossieChapters(
       (sum, evt) => sum + (evt.value_brl ?? 0),
       0,
     );
-    const avgConfidence = signals.length
+    // Signals may carry signal_confidence_score (0-100) or confidence (0-1);
+    // either may be absent — skip missing values instead of averaging NaN.
+    const confidenceScores = signals
+      .map((s) =>
+        s.signal_confidence_score ??
+        (s.confidence != null ? s.confidence * 100 : null),
+      )
+      .filter((n): n is number => n != null && Number.isFinite(n));
+    const avgConfidence = confidenceScores.length
       ? Math.round(
-          (signals.reduce((sum, s) => sum + s.confidence, 0) / signals.length) *
-            100,
+          confidenceScores.reduce((sum, n) => sum + n, 0) /
+            confidenceScores.length,
         )
-      : 0;
+      : null;
 
     return {
       num: String(i + 1).padStart(2, "0"),
