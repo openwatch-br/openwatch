@@ -143,7 +143,7 @@ export default function SignalDetailPage() {
             onPage={loadEvidencePage}
           />
           <SignalFactors signal={signal} />
-          <SignalEntities entities={entities} signalId={signalId} />
+          <SignalEntities entities={entities} />
           <SignalRelated legalBasis={legalBasis} relatedSignals={relatedSignals} />
         </div>
 

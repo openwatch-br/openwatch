@@ -1,33 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { displayIdentifierValue } from "@/lib/utils";
 import { ENTITY_TOKEN } from "./inference";
 import type { SignalEntity } from "@/lib/types";
 
-/** Involved entities as forensic subject cards, with a link to the full network. */
+/** Involved entities as forensic subject cards linking to each entity page. */
 export function SignalEntities({
   entities,
-  signalId,
 }: {
   entities: SignalEntity[];
-  signalId: string;
 }) {
   if (entities.length === 0) return null;
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
           Entidades envolvidas · {entities.length}
         </p>
-        <Link
-          href={`/signal/${signalId}/graph`}
-          className="inline-flex items-center gap-1 font-mono text-[11px] text-brand-text hover:underline"
-        >
-          Ver rede completa <ArrowUpRight className="h-3 w-3" />
-        </Link>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2.5">
