@@ -43,6 +43,14 @@ def setup_logging() -> None:
     for handler in root_logger.handlers:
         handler.setFormatter(processor_formatter)
 
+    # uvicorn attaches its own handlers to "uvicorn"/"uvicorn.error"/"uvicorn.access"
+    # with propagate=False, so they never reach root's handler above — without this,
+    # every access/startup log line stays plain-text even though LOG_FORMAT=json.
+    for uvicorn_logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        uvicorn_logger = logging.getLogger(uvicorn_logger_name)
+        uvicorn_logger.handlers = []
+        uvicorn_logger.propagate = True
+
     # Route stdlib loggers into structlog so Celery/SQLAlchemy logs are consistent.
     structlog.configure(
         processors=shared_processors + [structlog.stdlib.ProcessorFormatter.wrap_for_formatter],

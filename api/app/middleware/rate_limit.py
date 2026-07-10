@@ -1,25 +1,12 @@
 import time
 
 from openwatch_config import settings
+from openwatch_utils.logging import log
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-
-def _client_ip(request: Request) -> str:
-    """Return the real client IP.
-
-    In the AWS ALB deployment the ALB appends the original client IP as the
-    *last* entry of X-Forwarded-For, making it the only trustworthy value.
-    Intermediate proxies may inject arbitrary earlier entries, so we always
-    take the rightmost entry when the header is present.
-    """
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        parts = [p.strip() for p in forwarded_for.split(",") if p.strip()]
-        if parts:
-            return parts[-1]
-    return request.client.host if request.client else "unknown"
+from api.app.utils.net import get_client_ip as _client_ip
 
 
 async def _check_rate_limit(redis, key: str, burst: int) -> bool:
@@ -36,7 +23,8 @@ async def _check_rate_limit(redis, key: str, burst: int) -> bool:
     try:
         results = await pipe.execute()
         return results[1] >= burst
-    except Exception:
+    except Exception as exc:
+        log.warning("redis_unavailable", where="rate_limit", key=key, error=str(exc))
         return False  # Redis down → allow
 
 

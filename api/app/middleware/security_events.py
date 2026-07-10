@@ -11,13 +11,17 @@ so it can be forwarded to any log aggregator (Loki, CloudWatch, Datadog, etc.)
 """
 
 import hashlib
+import hmac
 import re
 import time
 
+from openwatch_config import settings
 from openwatch_utils.logging import log
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+
+from api.app.utils.net import get_client_ip
 
 # Detail reads audited na trilha LGPD (quem acessou o quê).
 # (regex de rota, resource_type) — o último segmento é o resource_id.
@@ -46,10 +50,8 @@ _SCAN_LIMIT = 4096
 
 
 def _extract_client_ip(request: Request) -> str:
-    forwarded_for = request.headers.get("X-Forwarded-For")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    """Return the real client IP (rightmost X-Forwarded-For entry — see api.app.utils.net)."""
+    return get_client_ip(request)
 
 
 def _detect_suspicious(text: str) -> list[str]:
@@ -196,7 +198,7 @@ class SecurityEventsMiddleware(BaseHTTPMiddleware):
 
             from api.app.db import engine
 
-            ip_hash = hashlib.sha256(client_ip.encode()).hexdigest()
+            ip_hash = hmac.new(settings.AUDIT_IP_SALT.encode(), client_ip.encode(), hashlib.sha256).hexdigest()
             async with engine.begin() as conn:
                 await conn.execute(
                     text("""

@@ -28,6 +28,10 @@ class CoreNotFoundError(CoreServiceError):
     """Raised when the core service returns a 404 Not Found response."""
 
 
+class CoreConflictError(CoreServiceError):
+    """Raised when the core service returns a 409 Conflict (e.g. pipeline already running)."""
+
+
 class CoreClient:
     """
     Async HTTP client for the openwatch-core internal service.
@@ -244,6 +248,8 @@ class CoreClient:
 def _raise_for_status(response: httpx.Response) -> None:
     if response.status_code == 404:
         raise CoreNotFoundError("Not found in core service")
+    if response.status_code == 409:
+        raise CoreConflictError(response.text[:200] or "Conflict in core service")
     if response.status_code >= 400:
         raise CoreServiceError(
             f"Core service error {response.status_code}: {response.text[:200]}"

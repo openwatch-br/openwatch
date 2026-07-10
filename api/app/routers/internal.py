@@ -1,13 +1,15 @@
 """Internal operator endpoints — proxied to openwatch-core.
 
 These routes are only intended for the operator dashboard.
-The rate-limit middleware keys them on X-Internal-Api-Key.
+Authentication is enforced via verify_internal_key (X-Internal-Api-Key),
+and the rate-limit middleware also keys them on X-Internal-Api-Key.
 """
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from api.app.dependencies import verify_internal_key
 from api.core_client import CoreClient
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(verify_internal_key)])
 
 
 def _client() -> CoreClient:

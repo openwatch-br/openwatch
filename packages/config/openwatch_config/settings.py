@@ -54,6 +54,7 @@ class Settings(BaseSettings):
 
     # LGPD
     CPF_HASH_SALT: str = "change-me-in-production"
+    AUDIT_IP_SALT: str = "change-me-in-production"
 
     # App
     APP_ENV: Literal["development", "staging", "production"] = "development"
@@ -85,6 +86,10 @@ class Settings(BaseSettings):
             if self.CPF_HASH_SALT == "change-me-in-production":
                 raise ValueError(
                     "CPF_HASH_SALT must be changed before running in production (LGPD compliance)"
+                )
+            if self.AUDIT_IP_SALT == "change-me-in-production":
+                raise ValueError(
+                    "AUDIT_IP_SALT must be changed before running in production (LGPD compliance)"
                 )
             if self.INTERNAL_API_KEY == "dev-internal-key-change-in-production":
                 raise ValueError(

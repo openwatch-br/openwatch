@@ -2,6 +2,7 @@ import hashlib
 import json
 
 from openwatch_config import settings
+from openwatch_utils.logging import log
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
@@ -25,8 +26,8 @@ async def cache_invalidate_pattern(redis, pattern: str) -> int:
                 deleted += len(keys)
             if cursor == 0:
                 break
-    except Exception:
-        pass
+    except Exception as exc:
+        log.warning("redis_unavailable", where="cache_invalidate_pattern", pattern=pattern, error=str(exc))
     return deleted
 
 
@@ -63,8 +64,8 @@ class CacheMiddleware(BaseHTTPMiddleware):
                     headers={**data["headers"], "X-Cache": "HIT"},
                     media_type="application/json",
                 )
-        except Exception:
-            pass
+        except Exception as exc:
+            log.warning("redis_unavailable", where="cache_get", cache_key=cache_key, error=str(exc))
 
         response = await call_next(request)
 
@@ -86,8 +87,8 @@ class CacheMiddleware(BaseHTTPMiddleware):
                     "headers": dict(response.headers),
                 })
                 await redis.setex(cache_key, ttl, cache_data)
-            except Exception:
-                pass
+            except Exception as exc:
+                log.warning("redis_unavailable", where="cache_set", cache_key=cache_key, error=str(exc))
 
             return Response(
                 content=body,
