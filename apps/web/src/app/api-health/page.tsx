@@ -14,7 +14,6 @@ import {
   RefreshCw,
   ServerCrash,
   Workflow,
-  Clock,
   ShieldCheck,
   Circle,
 } from "lucide-react";
@@ -37,28 +36,27 @@ function overallFromChecks(checks: ServiceCheck[]): HealthTone {
   return "healthy";
 }
 
+// Status colors use the dedicated --color-status-* tokens (not severity
+// tones) — this page reports service health, not finding severity.
 const TONE_CONFIG: Record<HealthTone, {
   label: string;
   color: string;
-  bgColor: string;
-  borderColor: string;
-  dotColor: string;
+  dotClass: string;
   Icon: typeof CheckCircle2;
 }> = {
-  healthy:   { label: "Operacional", color: "var(--color-low-text)",      bgColor: "var(--color-low-bg)",      borderColor: "var(--color-low-border)",      dotColor: "var(--color-low)",      Icon: CheckCircle2 },
-  attention: { label: "Atenção",     color: "var(--color-amber-text)",    bgColor: "var(--color-amber-dim)",   borderColor: "var(--color-amber-border)",    dotColor: "var(--color-amber)",    Icon: AlertTriangle },
-  blocked:   { label: "Bloqueado",   color: "var(--color-critical-text)", bgColor: "var(--color-critical-bg)", borderColor: "var(--color-critical-border)", dotColor: "var(--color-critical)", Icon: ServerCrash   },
+  healthy:   { label: "Operacional", color: "var(--color-status-ok)",      dotClass: "ow-status-ok",      Icon: CheckCircle2 },
+  attention: { label: "Atenção",     color: "var(--color-status-warning)", dotClass: "ow-status-warning", Icon: AlertTriangle },
+  blocked:   { label: "Bloqueado",   color: "var(--color-status-error)",   dotClass: "ow-status-error",   Icon: ServerCrash   },
 };
 
 const STATUS_CONFIG: Record<CheckStatus, {
   label: string;
-  dotColor: string;
-  textColor: string;
-  badge: string;
+  color: string;
+  dotClass: string;
 }> = {
-  ok:        { label: "ok",      dotColor: "var(--color-low)",      textColor: "var(--color-low-text)",      badge: "ow-badge ow-badge-low"      },
-  attention: { label: "atenção", dotColor: "var(--color-amber)",    textColor: "var(--color-amber-text)",    badge: "ow-badge ow-badge-amber"    },
-  error:     { label: "erro",    dotColor: "var(--color-critical)", textColor: "var(--color-critical-text)", badge: "ow-badge ow-badge-critical" },
+  ok:        { label: "ok",      color: "var(--color-status-ok)",      dotClass: "ow-status-ok"      },
+  attention: { label: "atenção", color: "var(--color-status-warning)", dotClass: "ow-status-warning" },
+  error:     { label: "erro",    color: "var(--color-status-error)",   dotClass: "ow-status-error"   },
 };
 
 export default function ApiHealthPage() {
@@ -169,6 +167,10 @@ export default function ApiHealthPage() {
   const toneConfig = TONE_CONFIG[tone];
   const ToneIcon = toneConfig.Icon;
 
+  const lastCheckedTime = checkedAt
+    ? new Date(checkedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : null;
+
   return (
     <div className="ow-mode-editorial ow-content">
       {/* ── Page Header ─────────────────────────────────────────── */}
@@ -182,81 +184,96 @@ export default function ApiHealthPage() {
           { label: "Checks ativos", value: checks.length, mono: true, tone: "brand" },
           { label: "Auto-refresh", value: "30s", mono: true },
           {
-            label: "Estado",
-            value: loading ? "Aguardando…" : toneConfig.label,
-            tone: loading ? "default" : tone === "healthy" ? "success" : tone === "attention" ? "warning" : "danger",
-          },
-          {
             label: "Última leitura",
-            value: checkedAt
-              ? new Date(checkedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-              : "Aguardando…",
+            value: lastCheckedTime ?? "Aguardando…",
             sub: checkedAt ? new Date(checkedAt).toLocaleDateString("pt-BR") : undefined,
             mono: true,
           },
         ]}
         actions={
-          <div className="flex items-center gap-3">
-            {!loading && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border"
-                style={{
-                  borderColor: toneConfig.borderColor,
-                  background: toneConfig.bgColor,
-                  color: toneConfig.color,
-                }}>
-                <ToneIcon className="h-4 w-4" />
-                <span className="text-label font-semibold">{toneConfig.label}</span>
-              </div>
-            )}
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void loadHealth()}
-              disabled={refreshing}
-              loading={refreshing}
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-              Atualizar
-            </Button>
-          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => void loadHealth()}
+            disabled={refreshing}
+            loading={refreshing}
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Atualizar
+          </Button>
         }
       />
 
       <div className="space-y-6 animate-fade-in">
 
-        {/* ── Auto-refresh notice ─────────────────────────────── */}
-        <div className="flex items-center gap-1.5 text-caption" style={{ color: "var(--color-text-3)" }}>
-          <Clock className="h-3.5 w-3.5 shrink-0" />
-          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--color-amber)" }} />
-          Atualização automática a cada 30s
-        </div>
-
-        {/* ── Overall health banner ───────────────────────────── */}
-        {!loading && (
-          <div
-            className="ow-card p-6 flex items-center gap-5 animate-slide-up"
-            style={{ borderColor: toneConfig.borderColor }}
-          >
-            <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl"
-              style={{ background: toneConfig.bgColor }}
-            >
-              <ToneIcon className="h-7 w-7" style={{ color: toneConfig.color }} />
+        {/* ── Overall state — the one thing that must read instantly ── */}
+        {loading ? (
+          <div className="ow-card p-6 md:p-7">
+            <div className="flex items-center gap-4">
+              <div className="ow-skeleton h-16 w-16 rounded-2xl shrink-0" />
+              <div className="flex-1 space-y-2.5">
+                <div className="ow-skeleton h-2.5 w-48 rounded" />
+                <div className="ow-skeleton h-8 w-40 rounded" />
+              </div>
             </div>
-            <div>
-              <p className="text-mono-xs uppercase tracking-widest mb-1" style={{ color: "var(--color-text-3)" }}>
-                Estado Geral da Plataforma
-              </p>
-              <p className="text-display-lg font-bold" style={{ color: toneConfig.color }}>
-                {toneConfig.label}
-              </p>
-              <p className="text-caption mt-1" style={{ color: "var(--color-text-2)" }}>
-                {tone === "healthy"
-                  ? "Todos os serviços estão operacionais e respondendo normalmente."
-                  : tone === "attention"
-                  ? "Um ou mais serviços requerem atenção. Verifique o painel abaixo."
-                  : "Serviços críticos indisponíveis. Ação imediata necessária."}
-              </p>
+          </div>
+        ) : (
+          <div
+            className="ow-card p-6 md:p-7 animate-slide-up"
+            style={{ borderColor: `color-mix(in srgb, ${toneConfig.color} 35%, var(--color-border))` }}
+          >
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-start gap-4">
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border"
+                  style={{
+                    background: `color-mix(in srgb, ${toneConfig.color} 12%, transparent)`,
+                    borderColor: `color-mix(in srgb, ${toneConfig.color} 35%, transparent)`,
+                  }}
+                >
+                  <ToneIcon className="h-8 w-8" style={{ color: toneConfig.color }} />
+                </div>
+                <div>
+                  <p className="text-mono-xs uppercase tracking-widest mb-1" style={{ color: "var(--color-text-3)" }}>
+                    Estado geral da plataforma
+                  </p>
+                  <p className="text-display-xl leading-none" style={{ color: toneConfig.color }}>
+                    {toneConfig.label}
+                  </p>
+                  <p className="text-caption mt-2 max-w-md" style={{ color: "var(--color-text-2)" }}>
+                    {tone === "healthy"
+                      ? "Todos os serviços estão operacionais e respondendo normalmente."
+                      : tone === "attention"
+                      ? "Um ou mais serviços requerem atenção — veja o detalhe abaixo."
+                      : "Serviço crítico indisponível — ação imediata necessária."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-start gap-1.5 md:items-end shrink-0">
+                <div className="flex items-center gap-1.5 text-caption" style={{ color: "var(--color-text-3)" }}>
+                  <span className="h-1.5 w-1.5 rounded-full ow-pulse" style={{ background: "var(--color-brand)" }} />
+                  Atualiza a cada 30s
+                </div>
+                <p className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
+                  Verificado às <span style={{ color: "var(--color-text-2)" }}>{lastCheckedTime ?? "—"}</span>
+                </p>
+              </div>
+            </div>
+
+            {/* At-a-glance signal row */}
+            <div
+              className="mt-5 pt-5 flex flex-wrap items-center gap-x-6 gap-y-2"
+              style={{ borderTop: "1px solid var(--color-border)" }}
+            >
+              {checks.map((check) => (
+                <div key={check.id} className="flex items-center gap-2">
+                  <span className={`ow-status-dot ${STATUS_CONFIG[check.status].dotClass}`} />
+                  <span className="text-label" style={{ color: "var(--color-text-2)" }}>
+                    {check.name}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -289,13 +306,13 @@ export default function ApiHealthPage() {
                   return (
                     <div
                       key={check.id}
-                      className="flex items-start gap-4 px-5 py-4"
+                      className="flex items-center gap-4 px-5 py-4"
                       style={{
                         borderBottom: i < checks.length - 1 ? `1px solid var(--color-border)` : undefined,
                       }}
                     >
                       <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border mt-0.5"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border"
                         style={{ background: "var(--color-surface-3)", borderColor: "var(--color-border)" }}
                       >
                         <CheckIcon className="h-4 w-4" style={{ color: "var(--color-text-3)" }} />
@@ -305,18 +322,17 @@ export default function ApiHealthPage() {
                           <span className="text-label font-semibold" style={{ color: "var(--color-text)" }}>
                             {check.name}
                           </span>
-                          <span className="text-mono-xs px-1.5 py-0.5 rounded border"
-                            style={{ color: "var(--color-text-3)", borderColor: "var(--color-border)", background: "var(--color-surface-3)" }}>
-                            {check.endpoint}
-                          </span>
+                          <span className="ow-code text-mono-xs">{check.endpoint}</span>
                         </div>
                         <p className="text-caption mt-0.5" style={{ color: "var(--color-text-2)" }}>
                           {check.detail}
                         </p>
                       </div>
-                      <span className={st.badge}>
-                        <span className="inline-block h-1.5 w-1.5 rounded-full mr-1" style={{ background: st.dotColor }} />
-                        {st.label}
+                      <span className="flex items-center gap-1.5 shrink-0">
+                        <span className={`ow-status-dot ${st.dotClass}`} />
+                        <span className="text-label" style={{ color: st.color }}>
+                          {st.label}
+                        </span>
                       </span>
                     </div>
                   );
@@ -334,16 +350,18 @@ export default function ApiHealthPage() {
             </p>
             <div className="ow-strip">
               <div className="ow-strip-item">
-                <span className="ow-strip-value text-mono">{heartbeatOk ? "OK" : "—"}</span>
+                <span className="ow-strip-value text-mono" style={{ color: heartbeatOk ? "var(--color-status-ok)" : "var(--color-status-error)" }}>
+                  {heartbeatOk ? "OK" : "—"}
+                </span>
                 <span className="ow-strip-label">API Container</span>
               </div>
               <div className="ow-strip-item">
                 <span className="ow-strip-value text-mono" style={{
                   color: coverageSummary.pipeline.overall_status === "healthy"
-                    ? "var(--color-low-text)"
+                    ? "var(--color-status-ok)"
                     : coverageSummary.pipeline.overall_status === "attention"
-                    ? "var(--color-amber-text)"
-                    : "var(--color-critical-text)",
+                    ? "var(--color-status-warning)"
+                    : "var(--color-status-error)",
                 }}>
                   {coverageSummary.pipeline.overall_status}
                 </span>
@@ -352,7 +370,7 @@ export default function ApiHealthPage() {
               <div className="ow-strip-item">
                 <span className="ow-strip-value text-mono" style={{
                   color: coverageSummary.totals.runtime.failed_or_stuck > 0
-                    ? "var(--color-critical-text)"
+                    ? "var(--color-status-error)"
                     : "var(--color-text)",
                 }}>
                   {coverageSummary.totals.runtime.failed_or_stuck}

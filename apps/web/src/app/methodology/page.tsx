@@ -6,6 +6,7 @@ import type { TypologyLegalBasis } from "@/lib/types";
 import { ArticleReadingShell, type ArticleTocEntry } from "@/features/methodology/components/ArticleReadingShell";
 import { NotaCallout, AvisoJuridicoCallout, NormaChips, FormulaBlock } from "@/features/methodology/components/ProseCallouts";
 import { ConfidenceThresholdTable } from "@/features/methodology/components/ConfidenceThresholdTable";
+import { ConfidenceScale } from "@/features/methodology/components/ConfidenceScale";
 import { TypologyCatalog } from "@/features/methodology/components/TypologyCatalog";
 import { LegalBasisTable } from "@/features/methodology/components/LegalBasisTable";
 import { PrintButton } from "@/features/methodology/components/PrintButton";
@@ -87,7 +88,7 @@ const TOC: ArticleTocEntry[] = [
   { num: "03", id: "sec-normas", label: "Referências normativas" },
   { num: "04", id: "sec-entidades", label: "Resolução de entidades" },
   { num: "05", id: "sec-tipologias", label: "Catálogo de tipologias" },
-  { num: "06", id: "sec-contestacao", label: "Contestação e correção" },
+  { num: "06", id: "sec-correcao", label: "Correção e proveniência" },
 ];
 
 export default async function MethodologyPage() {
@@ -103,22 +104,70 @@ export default async function MethodologyPage() {
 
   return (
     <div className="ow-mode-editorial ow-content">
-      <div className="mx-auto flex max-w-[1180px] items-center justify-end px-5 pt-2 sm:px-8">
-        <PrintButton />
-      </div>
+      {/* ── masthead ─────────────────────────────────────────────────── */}
+      <div className="mx-auto max-w-[1180px] px-5 pb-8 pt-10 sm:px-8 sm:pt-14">
+        <div className="flex items-start justify-between gap-6">
+          <p className="text-mono-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-brand-text)" }}>
+            Compliance &amp; Metodologia
+          </p>
+          <PrintButton />
+        </div>
 
-      <ArticleReadingShell eyebrow="Documento vivo" docVersion="v2.4" docRevisedAt="04 jul 2026" toc={TOC}>
-        <p className="text-mono-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-brand-text)" }}>
-          Compliance &amp; Metodologia
-        </p>
-        <h1>Como o OpenWatch gera indícios</h1>
-        <p className="ow-prose-dek">
+        <h1
+          className="mt-4 max-w-[16ch]"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 700,
+            fontSize: "clamp(2.25rem, 4.4vw, 3.75rem)",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.04,
+            color: "var(--color-text)",
+          }}
+        >
+          Como o OpenWatch gera indícios
+        </h1>
+        <p
+          className="mt-5 max-w-[58ch]"
+          style={{
+            fontFamily: "var(--font-display)",
+            fontWeight: 400,
+            fontSize: "clamp(1.05rem, 1.6vw, 1.3125rem)",
+            lineHeight: 1.5,
+            color: "var(--color-text-2)",
+          }}
+        >
           O que os sinais significam, como são calculados e — sobretudo — o que eles deliberadamente não afirmam.
         </p>
 
-        <div className="ow-divider my-9" />
+        <div
+          className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-2 border-t pt-4"
+          style={{ borderColor: "var(--color-border-subtle)" }}
+        >
+          {[
+            { label: "Versão", value: "v2.4" },
+            { label: "Revisão", value: "04 jul 2026" },
+            { label: "Tipologias", value: String(typologyEntries.length) },
+            { label: "Fontes públicas", value: String(DATA_SOURCES.length) },
+          ].map((meta) => (
+            <div key={meta.label} className="flex items-baseline gap-1.5">
+              <span className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
+                {meta.label}
+              </span>
+              <span className="text-mono-xs tabular-nums" style={{ color: "var(--color-text-2)" }}>
+                {meta.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        <h2 id="sec-principio">1 · Princípio: indício, nunca veredito</h2>
+      <ArticleReadingShell eyebrow="Documento vivo" docVersion="v2.4" docRevisedAt="04 jul 2026" toc={TOC}>
+        <p className="text-label mb-2" style={{ color: "var(--color-brand-text)" }}>
+          Princípio
+        </p>
+        <h2 id="sec-principio" style={{ marginTop: 0 }}>
+          Indício, nunca veredito
+        </h2>
         <p>
           Todo resultado do OpenWatch é um <strong>indício</strong> — um padrão estatístico ou documental que merece
           atenção humana. Não é acusação, prova ou condenação. A plataforma não julga; ela aponta onde investigar, e
@@ -126,31 +175,50 @@ export default async function MethodologyPage() {
         </p>
         <AvisoJuridicoCallout>
           A presunção de inocência é inegociável. Nomes de pessoas e empresas aparecem porque constam em dados
-          públicos — não porque a plataforma lhes atribui culpa. Contestações são acolhidas e integram a trilha de
-          auditoria (seção 6).
+          públicos — não porque a plataforma lhes atribui culpa. Qualquer sinal pode ser auditado até sua fonte
+          primária (seção 6).
         </AvisoJuridicoCallout>
 
-        <h2 id="sec-confianca">2 · A escala de confiança</h2>
-        <p>
-          Cada sinal carrega um <em>score de confiança</em> de 0 a 100. O score define o rótulo exibido:
+        <p className="text-label mb-2 mt-14" style={{ color: "var(--color-brand-text)" }}>
+          Método
         </p>
+        <h2 id="sec-confianca" style={{ marginTop: 0 }}>
+          A escala de confiança
+        </h2>
+        <p>
+          Cada sinal carrega um <em>score de confiança</em> de 0 a 100. O score define o rótulo exibido — e mede
+          confiança na detecção, não gravidade do achado:
+        </p>
+        <ConfidenceScale />
+        <p className="text-caption mb-3" style={{ color: "var(--color-text-3)" }}>
+          Como o rótulo aparece em cada sinal:
+        </p>
+        <ConfidenceThresholdTable />
         <FormulaBlock
-          label="Limiares"
+          label="Fórmula do score"
           formula={"score = 0,40 · confiança_ER\n      + 0,25 · frescor_dos_dados\n      + 0,20 · cobertura_de_fontes\n      + 0,15 · evidência_da_tipologia"}
-        >
-          <ConfidenceThresholdTable />
-        </FormulaBlock>
+        />
         <NotaCallout>
           O score mede <em>confiança na detecção</em>, não gravidade. Um sinal pode ser <strong>confirmado</strong>{" "}
           (temos certeza do que os dados mostram) e ainda assim de severidade baixa.
         </NotaCallout>
 
-        <h2 id="sec-normas">3 · Referências normativas</h2>
+        <p className="text-label mb-2 mt-14" style={{ color: "var(--color-brand-text)" }}>
+          Base legal
+        </p>
+        <h2 id="sec-normas" style={{ marginTop: 0 }}>
+          Referências normativas
+        </h2>
         <p>As tipologias citam dispositivos legais como <em>apoio à apuração</em>, jamais como enquadramento automático:</p>
         <NormaChips items={NORMAS} />
         <LegalBasisTable items={legalBasisList} />
 
-        <h2 id="sec-entidades">4 · Resolução de entidades</h2>
+        <p className="text-label mb-2 mt-14" style={{ color: "var(--color-brand-text)" }}>
+          Identidade
+        </p>
+        <h2 id="sec-entidades" style={{ marginTop: 0 }}>
+          Resolução de entidades
+        </h2>
         <p>
           Antes de qualquer tipologia rodar, registros de fontes distintas que descrevem a mesma pessoa ou empresa
           precisam ser unificados. A resolução de entidades (ER) compara pares de registros por uma hierarquia de
@@ -163,24 +231,38 @@ export default async function MethodologyPage() {
           comparação de identidade (LGPD art. 12).
         </NotaCallout>
 
-        <h2 id="sec-tipologias">5 · Catálogo de tipologias</h2>
+        <p className="text-label mb-2 mt-14" style={{ color: "var(--color-brand-text)" }}>
+          Catálogo
+        </p>
+        <h2 id="sec-tipologias" style={{ marginTop: 0 }}>
+          Catálogo de tipologias
+        </h2>
         <p>
           O motor aplica {typologyEntries.length} tipologias com thresholds específicos por contexto e baseline
           histórico. Cada entrada abaixo indica a fonte pública e a base legal usada como apoio à apuração.
         </p>
         <TypologyCatalog entries={typologyEntries} legalByCode={legalByCode} />
 
-        <h2 id="sec-contestacao">6 · Contestação e correção</h2>
+        <p className="text-label mb-2 mt-14" style={{ color: "var(--color-brand-text)" }}>
+          Governança
+        </p>
+        <h2 id="sec-correcao" style={{ marginTop: 0 }}>
+          Correção e proveniência
+        </h2>
         <p>
-          Qualquer pessoa ou empresa citada em um sinal pode contestá-lo diretamente na página do sinal, indicando o
-          tipo de problema (sinal incorreto, dado de entidade incorreto, duplicidade ou outro) e a justificativa.
-          Toda contestação recebe um identificador e é registrada com o próprio sinal — nada é resolvido em canal
-          privado sem trilha.
+          O OpenWatch aponta indícios — não formula acusações, e por isso não existe um sinal a ser &ldquo;contestado&rdquo;.
+          O que existe é uma trilha auditável: todo sinal é rastreável até seu evento de origem na fonte pública que o
+          gerou, e qualquer pessoa pode seguir esse caminho para conferir os dados por conta própria.
         </p>
         <p>
-          Correções procedentes atualizam o registro subjacente (evento, entidade ou score) e propagam para o
-          histórico do caso, mantendo a proveniência de que aquele dado foi corrigido e por quê.
+          Quando um dado de origem muda ou um erro é identificado — na fonte pública, na resolução de entidades ou no
+          cálculo do score — o registro subjacente é reingerido e recalculado, e a correção se propaga para o
+          histórico do caso. A proveniência anterior não é apagada: fica registrado o que mudou, quando e por quê.
         </p>
+        <NotaCallout>
+          Auditar um sinal não depende de abrir um chamado: os IDs de origem (edital, contrato, CNPJ) ficam expostos
+          no próprio sinal, prontos para conferência direta na fonte.
+        </NotaCallout>
 
         <div className="ow-divider my-9" />
 

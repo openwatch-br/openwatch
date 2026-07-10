@@ -58,18 +58,18 @@ export function ArticleReadingShell({
     <div className="mx-auto grid max-w-[1180px] grid-cols-1 gap-0 md:grid-cols-[248px_minmax(0,1fr)]">
       {/* ── anchored TOC ─────────────────────────────────────────── */}
       <aside className="hidden border-r border-[var(--color-border-subtle)] px-6 py-8 md:block">
-        <div className="sticky top-[calc(var(--shell-height)+24px)] flex flex-col gap-5">
-          <div>
+        <div className="sticky top-[calc(var(--shell-height)+24px)] flex flex-col gap-6">
+          <div className="border-b pb-4" style={{ borderColor: "var(--color-border-subtle)" }}>
             <p className="text-mono-xs uppercase tracking-[0.14em]" style={{ color: "var(--color-text-3)" }}>
               {eyebrow}
             </p>
-            <p className="text-mono-xs mt-1" style={{ color: "var(--color-text-3)" }}>
+            <p className="text-mono-xs mt-1.5 tabular-nums" style={{ color: "var(--color-text-3)" }}>
               {docVersion} · rev. {docRevisedAt}
             </p>
           </div>
 
           <nav className="flex flex-col gap-0.5">
-            <p className="mb-1.5 text-label" style={{ color: "var(--color-text-3)" }}>
+            <p className="mb-2 text-label" style={{ color: "var(--color-text-3)" }}>
               Nesta página
             </p>
             {toc.map((entry) => {
@@ -78,18 +78,24 @@ export function ArticleReadingShell({
                 <a
                   key={entry.id}
                   href={`#${entry.id}`}
-                  className="flex items-center gap-2.5 rounded-md py-[7px] pl-2.5 pr-2 transition-colors hover:bg-[var(--color-surface)]"
+                  className="flex items-center gap-2.5 rounded-md py-[7px] pl-2.5 pr-2 transition-colors duration-150 hover:bg-[var(--color-surface)]"
                   style={{
                     background: isActive ? "var(--color-brand-tint)" : "transparent",
                     borderLeft: `2px solid ${isActive ? "var(--color-brand)" : "transparent"}`,
                   }}
                 >
-                  <span className="text-mono-xs w-4 shrink-0" style={{ color: "var(--color-text-3)" }}>
+                  <span
+                    className="text-mono-xs w-4 shrink-0 tabular-nums"
+                    style={{ color: isActive ? "var(--color-brand-text)" : "var(--color-text-3)" }}
+                  >
                     {entry.num}
                   </span>
                   <span
                     className="flex-1 text-[12.5px] leading-tight"
-                    style={{ color: isActive ? "var(--color-text)" : "var(--color-text-2)" }}
+                    style={{
+                      color: isActive ? "var(--color-text)" : "var(--color-text-2)",
+                      fontWeight: isActive ? 600 : 400,
+                    }}
                   >
                     {entry.label}
                   </span>

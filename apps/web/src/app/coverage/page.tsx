@@ -6,6 +6,7 @@ import { getCoverageV2Sources, getCoverageV2Summary } from "@/lib/api";
 import { getPipelineCapacity } from "@/lib/operatorApiClient";
 import type { CoverageStatus, CoverageV2SourceItem } from "@/lib/types";
 import { PageHeader } from "@/components/PageHeader";
+import { StatusDot } from "@/components/StatusDot";
 import { HealthSummaryStrip } from "@/features/coverage/components/HealthSummaryStrip";
 import { FreshnessMap } from "@/features/coverage/components/FreshnessMap";
 import { FailedRunDetail } from "@/features/coverage/components/FailedRunDetail";
@@ -14,8 +15,21 @@ import { PipelineExecutionModal } from "@/features/coverage/components/PipelineE
 import { PipelineOperationsPanel } from "@/features/coverage/components/PipelineOperationsPanel";
 import { useSourceRunHistory } from "@/features/coverage/hooks/useSourceRunHistory";
 import { statusUrgency } from "@/features/coverage/lib/coverageStatus";
-import { Database, RefreshCw, Search } from "lucide-react";
+import { Database, Gauge, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/Button";
+
+const CAPACITY_RECOMMENDATION_LABEL: Record<string, string> = {
+  idle: "Ocioso — pronto para disparar",
+  ingest_active: "Ingestão em andamento",
+  er_active: "Resolução de entidades em andamento",
+};
+
+const CAPACITY_STAGE_LABEL: Record<string, string> = {
+  ingest: "Ingestão",
+  entity_resolution: "Resolução de entidades",
+  baselines: "Baselines",
+  signals: "Sinais",
+};
 
 export default function CoveragePage() {
   const queryClient = useQueryClient();
@@ -113,7 +127,7 @@ export default function CoveragePage() {
           <HealthSummaryStrip sources={sourcesItems} loading={summaryLoading && sourcesLoading} />
 
           <div className="flex flex-wrap items-center gap-2 border-t border-b px-5 py-3" style={{ borderColor: "var(--color-border)" }}>
-            <label className="flex items-center gap-2 rounded-lg border px-3 py-1.5" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
+            <label className="flex items-center gap-2 rounded-lg border px-3 py-1.5 transition-colors focus-within:border-[var(--color-border-strong)]" style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}>
               <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--color-text-3)" }} />
               <input
                 type="text"
@@ -137,6 +151,11 @@ export default function CoveragePage() {
               <option value="error">Erro</option>
               <option value="pending">Pendente</option>
             </select>
+            {(search.trim() || statusFilter) && (
+              <span className="text-mono-xs" style={{ color: "var(--color-text-3)" }}>
+                {filteredSources.length} de {sourcesItems.length} fontes
+              </span>
+            )}
             <span className="ml-auto text-mono-xs" style={{ color: "var(--color-text-3)" }}>
               janela: últimos 30 dias
             </span>
@@ -165,15 +184,56 @@ export default function CoveragePage() {
 
         {capacity && (
           <section className="ow-card p-5">
-            <p className="text-mono-xs uppercase tracking-widest mb-4" style={{ color: "var(--color-text-3)" }}>
-              Capacidade do pipeline
-            </p>
-            <div className="ow-strip">
-              {Object.entries(capacity).map(([key, val]) => (
-                <div key={key} className="ow-strip-item">
-                  <span className="ow-strip-value text-mono">{String(val)}</span>
-                  <span className="ow-strip-label">{key.replace(/_/g, " ")}</span>
-                </div>
+            <div className="mb-4 flex items-center gap-2.5">
+              <Gauge className="h-4 w-4" style={{ color: "var(--color-text-3)" }} />
+              <p className="text-mono-xs uppercase tracking-widest" style={{ color: "var(--color-text-3)" }}>
+                Capacidade do pipeline
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-px sm:grid-cols-4" style={{ background: "var(--color-border)" }}>
+              <div className="flex flex-col gap-1 p-4" style={{ background: "var(--color-canvas)" }}>
+                <span className="text-mono text-xl font-bold tabular-nums" style={{ color: "var(--color-text)" }}>
+                  {capacity.running_ingest_jobs}
+                  <span className="text-sm font-normal" style={{ color: "var(--color-text-3)" }}> / {capacity.max_concurrent_ingest}</span>
+                </span>
+                <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>jobs de ingestão</span>
+              </div>
+              <div className="flex flex-col gap-1 p-4" style={{ background: "var(--color-canvas)" }}>
+                <span className="flex items-center gap-1.5 text-mono text-xl font-bold" style={{ color: capacity.er_running ? "var(--color-status-warning)" : "var(--color-text)" }}>
+                  <StatusDot size="sm" status={capacity.er_running ? "warning" : "pending"} pulse={capacity.er_running} />
+                  {capacity.er_running ? "Ativa" : "Ociosa"}
+                </span>
+                <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>resolução de entidades</span>
+              </div>
+              <div className="flex flex-col gap-1 p-4" style={{ background: "var(--color-canvas)" }}>
+                <span className="text-mono text-xl font-bold tabular-nums" style={{ color: capacity.slots_available > 0 ? "var(--color-status-ok)" : "var(--color-text-3)" }}>
+                  {capacity.slots_available}
+                </span>
+                <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>slots livres</span>
+              </div>
+              <div className="flex flex-col gap-1 p-4" style={{ background: "var(--color-canvas)" }}>
+                <span className="text-[13px] font-semibold leading-snug" style={{ color: "var(--color-text)" }}>
+                  {CAPACITY_RECOMMENDATION_LABEL[capacity.recommendation] ?? capacity.recommendation}
+                </span>
+                <span className="text-[11px] uppercase tracking-wide" style={{ color: "var(--color-text-3)" }}>recomendação</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 border-t pt-4" style={{ borderColor: "var(--color-border)" }}>
+              {Object.entries(capacity.can_dispatch).map(([stage, allowed]) => (
+                <span
+                  key={stage}
+                  className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-mono-xs"
+                  style={{
+                    borderColor: allowed ? "var(--color-low-border)" : "var(--color-border)",
+                    background: allowed ? "var(--color-low-bg)" : "transparent",
+                    color: allowed ? "var(--color-low-text)" : "var(--color-text-3)",
+                  }}
+                >
+                  <StatusDot size="sm" status={allowed ? "ok" : "pending"} />
+                  {CAPACITY_STAGE_LABEL[stage] ?? stage}
+                </span>
               ))}
             </div>
           </section>

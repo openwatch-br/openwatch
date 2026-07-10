@@ -37,8 +37,12 @@ export function FreshnessRow({ item, preview, days, onSelect }: FreshnessRowProp
               ? "var(--color-status-ok)"
               : c.status === "failed"
                 ? "var(--color-status-error)"
-                : "var(--color-border-subtle)",
-            opacity: preview ? 1 : 0.35,
+                : "var(--color-surface-3)",
+            border: c.status === "empty" ? "1px solid var(--color-border-subtle)" : "none",
+            // Group into weeks: a slightly wider gap every 7th cell reads as
+            // calendar structure without needing separate week labels.
+            marginRight: (i + 1) % 7 === 0 && i !== cells.length - 1 ? "3px" : undefined,
+            opacity: preview ? 1 : 0.4,
           }}
         />
       ))}
